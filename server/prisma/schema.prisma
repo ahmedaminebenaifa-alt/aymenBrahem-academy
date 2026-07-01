@@ -1,0 +1,78 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+
+model User {
+  id String @id @default(uuid())
+  email String @unique
+  password String
+  name String?
+  role Role @default(STUDENT)
+  birthDate DateTime?
+  createdAt   DateTime     @default(now())
+  enrollments Enrollment[]
+}
+
+enum Role {
+  STUDENT
+  ADMIN
+}
+
+model Course {
+  id           String        @id @default(uuid())
+  title        String
+  description  String
+  isFree       Boolean       @default(true)
+  price        Decimal?      @db.Decimal(10, 2)
+  coverImage   String?
+  published    Boolean       @default(false)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  files        CourseFile[]
+  enrollments  Enrollment[]
+
+}
+
+model CourseFile {
+  id        String   @id @default(uuid())
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  name      String
+  url       String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([courseId])
+}
+
+model Enrollment {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  courseId   String
+  course     Course   @relation(fields: [courseId], references: [id])
+  enrolledAt DateTime @default(now())
+
+  @@unique([userId, courseId])
+  @@index([courseId])
+}
+
+model LiveSession {
+  id        String    @id @default(uuid())
+  title     String?
+  link      String?
+  isActive  Boolean   @default(false)
+  startedAt DateTime?
+}
