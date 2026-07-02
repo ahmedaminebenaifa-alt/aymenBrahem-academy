@@ -1,0 +1,34 @@
+import { Router } from 'express';
+import * as courseFileController from '../controllers/courseFile.controller.js';
+import { verifyAuth, requireRole } from '../middleware/auth.middleware.js';
+import { validate, validateParams } from '../middleware/validate.middleware.js';
+import { upload, handleUploadError } from '../middleware/upload.middleware.js';
+import {
+  courseIdParamSchema,
+  fileIdParamSchema,
+  uploadFileBodySchema,
+} from '../validators/courseFile.validator.js';
+
+const router = Router();
+
+router.post(
+  '/:courseId/files',
+  verifyAuth,
+  requireRole('ADMIN'),
+  validateParams(courseIdParamSchema),
+  courseFileController.ensureCourseExists,
+  upload.single('file'),
+  handleUploadError,
+  validate(uploadFileBodySchema),
+  courseFileController.uploadFile
+);
+
+router.delete(
+  '/files/:fileId',
+  verifyAuth,
+  requireRole('ADMIN'),
+  validateParams(fileIdParamSchema),
+  courseFileController.deleteFile
+);
+
+export default router;
