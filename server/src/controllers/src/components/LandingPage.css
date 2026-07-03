@@ -1,0 +1,198 @@
+/* ☀️ تنسيقات واجهة الاستقبال - src/components/LandingPage.css */
+
+.title-section {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  animation: titleAnimation 1.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  margin: 0;
+  padding: 10px;
+}
+
+@keyframes titleAnimation {
+  0% {
+    opacity: 0;
+    transform: translateY(80px); 
+    filter: blur(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0); 
+    filter: blur(0);
+  }
+}
+
+.hero-section-full {
+  width: 100%;
+  max-width: 1300px;
+  padding: 5rem 2rem;
+  box-sizing: border-box;
+}
+
+.hero-split-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4rem;
+  width: 100%;
+  text-align: right;
+}
+
+.hero-image-block {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+.sheikh-image-wrapper {
+  position: relative;
+  width: 380px;
+  height: 380px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  overflow: visible;
+}
+
+.islamic-bg-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  animation: svgEntryRotate 1.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  filter: drop-shadow(0 10px 25px rgba(44, 30, 21, 0.05));
+}
+
+.sheikh-avatar-img {
+  width: 100%;
+  height: auto;
+  max-height: 420px;
+  object-fit: cover;
+  position: absolute;
+  bottom: 0;
+  z-index: 2;
+  transform: scale(1.08);
+  filter: drop-shadow(0 12px 20px rgba(0, 0, 0, 0.16));
+  animation: sheikhFadeIn 1.2s ease-out forwards;
+}
+
+.hero-text-block-emerge {
+  flex: 1.4;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  animation: emergeFromAvatar 1.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+}
+
+@keyframes emergeFromAvatar {
+  0% { opacity: 0; transform: translateX(80px); filter: blur(8px); }
+  100% { opacity: 1; transform: translateX(0); filter: blur(0); }
+}
+
+.islamic-ornament {
+  color: #b38f56; 
+  font-size: 1.6rem;
+  margin-bottom: 0.5rem;
+  animation: ornamentAnimation 4s ease 1.5s infinite;
+}
+
+@keyframes ornamentAnimation {
+  0% { letter-spacing: 0px; }
+  50% { letter-spacing: 6px; }
+  100% { letter-spacing: 0px; }
+}
+
+.title-section-landing h1 {
+  font-size: 3.2rem;
+  color: #2c1e15; 
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-weight: 900;
+}
+
+.hero-tagline {
+  font-size: 1.2rem;
+  line-height: 1.8;
+  color: #5a4b41; 
+  margin-bottom: 2rem;
+}
+
+.academy-pillars {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.2rem;
+  margin-bottom: 2.5rem;
+}
+
+.pillar-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 1.2rem auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #b38f56; 
+  transition: transform 0.4rem cubic-bezier(0.16, 1, 0.3, 1), color 0.3s ease;
+}
+
+.pillar-svg { width: 100%; height: 100%; display: block; }
+
+.pillar-card {
+  background-color: #ffffff;
+  padding: 2rem 1.5rem;
+  border-radius: 12px;
+  border: 1px solid #e8e1d7;
+  box-shadow: 0 4px 15px rgba(44, 30, 21, 0.02);
+  text-align: center;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pillar-card:hover {
+  border-color: #b38f56;
+  transform: translateY(-6px);
+  box-shadow: 0 15px 35px rgba(179, 143, 86, 0.12);
+}
+
+.pillar-card:hover .pillar-icon {
+  color: #2c1e15; 
+  transform: scale(1.08); 
+}
+
+.btn-primary, .btn-secondary {
+  padding: 0.9rem 2.5rem;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Tajawal', sans-serif;
+}
+
+.btn-primary { background-color: #2c1e15; color: #fbf9f6; border: none; }
+.btn-primary:hover { background-color: #b38f56; transform: translateY(-1px); }
+
+.btn-secondary { background-color: transparent; color: #2c1e15; border: 2px solid #2c1e15; }
+.btn-secondary:hover { background-color: rgba(44, 30, 21, 0.03); border-color: #b38f56; color: #b38f56; transform: translateY(-1px); }
+
+@keyframes svgEntryRotate {
+  from { transform: rotate(0deg); opacity: 0; }
+  to { transform: rotate(180deg); opacity: 1; }
+}
+
+@keyframes sheikhFadeIn {
+  from { opacity: 0; transform: scale(1.04) translateY(15px); }
+  to { opacity: 1; transform: scale(1.08) translateY(0); }
+}
+
+/* تجاوب واجهة الاستقبال مع الهواتف */
+@media (max-width: 768px) {
+  .title-section-landing h1 { font-size: 2.2rem; text-align: center; }
+  .hero-tagline { text-align: center; font-size: 1.05rem; }
+  .islamic-ornament { text-align: center; }
+  .pillar-card { text-align: center; }
+}

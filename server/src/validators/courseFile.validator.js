@@ -12,5 +12,5 @@ export const fileIdParamSchema = z.object({
 // Only `order` arrives in the body; name/url are derived from the uploaded file itself.
 // multipart/form-data sends everything as strings, so this coerces to a number.
 export const uploadFileBodySchema = z.object({
-  order: z.coerce.number().int().nonnegative('Order must be a non-negative integer').optional(),
+  order: z.coerce.number().int().nonnegative('Order must be a non-negative integer').catch(0),
 });

@@ -9,10 +9,10 @@ import {
   uploadFileBodySchema,
 } from '../validators/courseFile.validator.js';
 
-const router = Router();
+const router = Router({ mergeParams: true });
 
 router.post(
-  '/:courseId/files',
+  '/',
   verifyAuth,
   requireRole('ADMIN'),
   validateParams(courseIdParamSchema),
@@ -24,7 +24,7 @@ router.post(
 );
 
 router.delete(
-  '/files/:fileId',
+  '/:fileId',
   verifyAuth,
   requireRole('ADMIN'),
   validateParams(fileIdParamSchema),
