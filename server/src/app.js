@@ -2,28 +2,67 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import { rateLimit } from 'express-rate-limit';
-
+import path from 'path';
 import routes from './routes/index.js';
-import {errorHandler} from './middleware/error.middleware.js';
+import { errorHandler } from './middleware/error.middleware.js';
 import { ApiError } from './utils/ApiError.js';
-
+import { fileURLToPath } from 'url';
 
 const app = express();
 
-// 1. Global Security Middlewares
-app.use(helmet());
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// تجهيز قائمة العناوين المسموح لها بالوصول والتضمين (Frontend Origins)
+const allowedOrigins = [
+  'http://localhost:5174',
+  'http://localhost:5173', // تم إضافته لضمان العمل لو تغير منفذ Vite تلقائياً
+  process.env.CLIENT_URL
+].filter(Boolean);
+
+// ============================================================
+// 1. Global Security Middlewares (الحماية المتقدمة للـ iFrames والملفات)
+// ============================================================
+app.use(helmet({
+  // السماح بمشاركة الصور والملفات عبر النطاقات المختلفة
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  // إيقاف COEP لمنع المتصفح من حظر تحميل ملفات الـ PDF العابرة للمنافذ
+  crossOriginEmbedderPolicy: false,
+  // تخصيص سياسة أمن المحتوى لفتح الباب للمشغل الخاص بك
+  contentSecurityPolicy: {
+    directives: {
+      ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+      // 🛡️ إخبار المتصفح رسمياً بالعناوين المسموح لها بوضع ملفات السيرفر داخل iframe
+      "frame-ancestors": ["'self'", ...allowedOrigins],
+    },
+  },
+  // إيقاف الخيار الافتراضي X-Frame-Options القديم ليحل محله frame-ancestors الأحدث والأكثر مرونة
+  frameguard: false, 
+}));
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5174', 
+  origin: function (origin, callback) {
+    // السماح بالطلبات التي لا تحتوي على origin (مثل تطبيقات الموبايل أو الـ Postman) أو العناوين المسجلة
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Blocked by CORS policy'));
+    }
+  },
   credentials: true,
 }));
 
+// ============================================================
 // 2. Request Parsers
+// ============================================================
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 app.use(express.json({ limit: '10kb' }));
 
+// ============================================================
 // 3. Rate Limiter (Applied globally to all /api endpoints)
+// ============================================================
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
+  windowMs: 15 * 60 * 1000, // 15 دقيقة
   max: 10000,
   message: { 
     error: 'Too many requests from this IP address. Please try again after 15 minutes.' 
@@ -33,21 +72,35 @@ const limiter = rateLimit({
 });
 app.use('/api', limiter);
 
+// ============================================================
 // 4. Health Check
+// ============================================================
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date() });
 }); 
 
+// ============================================================
 // 5. App Routes & Static Files
+// ============================================================
 app.use('/api', routes);
-app.use('/uploads', express.static('uploads'));
 
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads'), {
+  setHeaders: (res, path) => {
+    res.set('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.set('X-Frame-Options', 'ALLOWALL'); 
+  }
+}));
+
+// ============================================================
 // 6. 404 Catch-All (For paths that don't match any route above)
+// ============================================================
 app.use((req, res, next) => {
   next(new ApiError(404, `Route ${req.originalUrl} not found`));
 });
 
+// ============================================================
 // 7. Centralized Error Handler (MUST BE AT THE VERY BOTTOM)
+// ============================================================
 app.use(errorHandler);
 
 export default app;
