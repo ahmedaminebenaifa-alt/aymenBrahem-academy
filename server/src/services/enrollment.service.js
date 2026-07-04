@@ -41,6 +41,10 @@ export const getMyEnrollments = (userId) => {
           id: true,
           title: true,
           coverImage: true,
+          category: true,
+          isFree: true,
+          price: true,
+          _count: { select: { files: true } },
           description: true
         }
       } 

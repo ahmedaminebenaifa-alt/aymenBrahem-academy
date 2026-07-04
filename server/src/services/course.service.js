@@ -90,6 +90,7 @@ export const getStudentCourses = async (userId) => {
       id: course.id,
       title: course.title,
       description: course.description,
+      category: course.category,
       isFree: course.isFree,
       price: course.price,
       coverImage: course.coverImage,

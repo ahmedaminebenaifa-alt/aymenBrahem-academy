@@ -33,6 +33,7 @@ model Course {
   id           String        @id @default(uuid())
   title        String
   description  String
+  category     CourseCategory? 
   isFree       Boolean       @default(true)
   price        Decimal?      @db.Decimal(10, 2)
   coverImage   String?
@@ -43,6 +44,15 @@ model Course {
   files        CourseFile[]
   enrollments  Enrollment[]
 
+}
+
+enum CourseCategory {
+  QURAN       // تجويد / حفظ
+  TAFSIR      // تفسير
+  FIQH        // فقه
+  AQEEDAH     // عقيدة
+  ARABIC      // نحو / لغة عربية
+  HADITH      // حديث
 }
 
 model CourseFile {
