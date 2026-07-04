@@ -4,22 +4,50 @@ export const validateCreateUser = (req, res, next) => {
   const { name, email, password, role } = req.body;
 
   if (!name || name.trim().length < 3) {
-    return next(new ApiError('يجب أن يحتوي الاسم على 3 أحرف على الأقل', 400));
+    return next(new ApiError(400, 'يجب أن يحتوي الاسم على 3 أحرف على الأقل')); // 👈 fixed
   }
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!email || !emailRegex.test(email)) {
-    return next(new ApiError('يرجى إدخال بريد إلكتروني صحيح', 400));
+    return next(new ApiError(400, 'يرجى إدخال بريد إلكتروني صحيح')); // 👈 fixed
   }
 
-  if (!password || password.length < 6) {
-    return next(new ApiError('كلمة المرور يجب ألا تقل عن 6 أحرف', 400));
+  if (!password || password.length < 8) {
+    return next(new ApiError(400, 'كلمة المرور يجب ألا تقل عن 8 أحرف')); // 👈 fixed
   }
 
   const validRoles = ['طالب', 'مدير النظام'];
   if (role && !validRoles.includes(role)) {
-    return next(new ApiError('دور المستخدم المحدد غير صالح، اختر "طالب" أو "مدير النظام"', 400));
+    return next(new ApiError(400, 'دور المستخدم المحدد غير صالح، اختر "طالب" أو "مدير النظام"')); // 👈 fixed
   }
 
+  next();
+};
+
+export const validateUpdateProfile = (req, res, next) => {
+  const { name, email } = req.body;
+
+  if (name !== undefined && name.trim().length < 3) {
+    return next(new ApiError(400, 'يجب أن يحتوي الاسم على 3 أحرف على الأقل'));
+  }
+  if (email !== undefined) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return next(new ApiError(400, 'يرجى إدخال بريد إلكتروني صحيح'));
+    }
+  }
+  next();
+};
+
+
+export const validateChangePassword = (req, res, next) => {
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword) {
+    return next(new ApiError(400, 'يرجى إدخال كلمة المرور الحالية'));
+  }
+  if (!newPassword || newPassword.length < 8) {
+    return next(new ApiError(400, 'كلمة المرور الجديدة يجب ألا تقل عن 8 أحرف'));
+  }
   next();
 };
