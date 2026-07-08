@@ -13,10 +13,10 @@ const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// تجهيز قائمة العناوين المسموح لها بالوصول والتضمين (Frontend Origins)
+
 const allowedOrigins = [
   'http://localhost:5174',
-  'http://localhost:5173', // تم إضافته لضمان العمل لو تغير منفذ Vite تلقائياً
+  'http://localhost:5173',
   process.env.CLIENT_URL
 ].filter(Boolean);
 
@@ -24,25 +24,20 @@ const allowedOrigins = [
 // 1. Global Security Middlewares (الحماية المتقدمة للـ iFrames والملفات)
 // ============================================================
 app.use(helmet({
-  // السماح بمشاركة الصور والملفات عبر النطاقات المختلفة
+  
   crossOriginResourcePolicy: { policy: "cross-origin" },
-  // إيقاف COEP لمنع المتصفح من حظر تحميل ملفات الـ PDF العابرة للمنافذ
   crossOriginEmbedderPolicy: false,
-  // تخصيص سياسة أمن المحتوى لفتح الباب للمشغل الخاص بك
   contentSecurityPolicy: {
     directives: {
       ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-      // 🛡️ إخبار المتصفح رسمياً بالعناوين المسموح لها بوضع ملفات السيرفر داخل iframe
       "frame-ancestors": ["'self'", ...allowedOrigins],
     },
   },
-  // إيقاف الخيار الافتراضي X-Frame-Options القديم ليحل محله frame-ancestors الأحدث والأكثر مرونة
   frameguard: false, 
 }));
 
 app.use(cors({
   origin: function (origin, callback) {
-    // السماح بالطلبات التي لا تحتوي على origin (مثل تطبيقات الموبايل أو الـ Postman) أو العناوين المسجلة
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {

@@ -35,7 +35,8 @@ export const deleteUserById = async (id) => {
 };
 
 
-export const updateOwnProfile = async (userId, { name, email }) => {
+export const updateOwnProfile = async (userId, { name, email, phoneNumber, birthDate }) => {
+  // 1. Check if the new email is already taken by someone else
   if (email) {
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing && existing.id !== userId) {
@@ -43,13 +44,34 @@ export const updateOwnProfile = async (userId, { name, email }) => {
     }
   }
 
+  // 2. Update the user with all available fields
   return prisma.user.update({
     where: { id: userId },
     data: {
       ...(name !== undefined && { name }),
       ...(email !== undefined && { email }),
+      ...(phoneNumber !== undefined && { phoneNumber }),
+      // Safely handle the birthDate conversion
+      ...(birthDate !== undefined && { birthDate: birthDate ? new Date(birthDate) : null }),
     },
-    select: { id: true, name: true, email: true, role: true, createdAt: true },
+    select: { 
+      id: true, 
+      name: true, 
+      email: true, 
+      phoneNumber: true, 
+      birthDate: true, 
+      profileImage: true, 
+      role: true, 
+      createdAt: true 
+    },
+  });
+};
+
+export const updateProfileImage = async (userId, imageUrl) => {
+  return prisma.user.update({
+    where: { id: userId },
+    data: { profileImage: imageUrl },
+    select: { id: true, name: true, email: true, phoneNumber: true, birthDate: true, profileImage: true, role: true, createdAt: true },
   });
 };
 
@@ -69,4 +91,22 @@ export const changeOwnPassword = async (userId, { currentPassword, newPassword }
   await prisma.user.update({ where: { id: userId }, data: { password: hashedPassword } });
 
   return { message: 'تم تغيير كلمة المرور بنجاح' };
+};
+
+export const getAllUsers = async () => {
+  return prisma.user.findMany({
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      phoneNumber: true,
+      birthDate: true,
+      profileImage: true,
+      createdAt: true,
+    },
+    orderBy: {
+      createdAt: 'desc', 
+    },
+  });
 };

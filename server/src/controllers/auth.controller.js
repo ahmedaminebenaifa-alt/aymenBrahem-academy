@@ -15,7 +15,16 @@ export const login = asyncHandler(async (req, res) => {
 export const me = asyncHandler(async (req, res) => {
   const user = await prisma.user.findUnique({
     where: { id: req.user.id },
-    select: { id: true, email: true, name: true, role: true, createdAt: true },
+    select: { 
+      id: true, 
+      email: true, 
+      name: true, 
+      role: true, 
+      createdAt: true,
+      profileImage: true,
+      phoneNumber: true,
+      birthDate: true
+    },
   });
   res.json(user);
 });

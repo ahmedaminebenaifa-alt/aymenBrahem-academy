@@ -1,5 +1,6 @@
 import prisma from '../config/db.js';
 import { ApiError } from '../utils/ApiError.js';
+import * as notificationService from './notification.service.js';
 
 export const getCurrentLive = async () => {
 
@@ -22,7 +23,7 @@ export const startLive = async (data) => {
 
   const activeSession = await prisma.liveSession.findFirst();
 
-  return await prisma.liveSession.upsert({
+  const session = await prisma.liveSession.upsert({
     where: { id: activeSession?.id || 'default-id' }, 
     update: {
       title: data.title,
@@ -37,7 +38,18 @@ export const startLive = async (data) => {
       startedAt: new Date(),
     },
   });
+  
+  await notificationService.createNotification({
+    type: 'LIVE_SESSION',
+    title: 'بدأ بث مباشر جديد',
+    message: session.title,
+    link: '/dashboard/student', 
+  });
+  
+  return session;
+
 };
+
 
 
 export const endLive = async () => {

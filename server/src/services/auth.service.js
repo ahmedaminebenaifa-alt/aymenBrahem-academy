@@ -21,7 +21,15 @@ export const registerUser = async ({ email, password, name }) => {
 
   return {
     token,
-    user: { id: user.id, email: user.email, name: user.name, role: user.role },
+    user: { 
+      id: user.id, 
+      email: user.email, 
+      name: user.name, 
+      role: user.role,
+      profileImage: user.profileImage,
+      phoneNumber: user.phoneNumber,
+      birthDate: user.birthDate
+    },
   };
 };
 
@@ -37,6 +45,14 @@ export const loginUser = async ({ email, password }) => {
 
   return {
     token,
-    user: { id: user.id, email: user.email, name: user.name, role: user.role },
+    user: { 
+      id: user.id, 
+      email: user.email, 
+      name: user.name, 
+      role: user.role,
+      profileImage: user.profileImage,
+      phoneNumber: user.phoneNumber,
+      birthDate: user.birthDate
+    },
   };
 };

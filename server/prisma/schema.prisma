@@ -18,10 +18,13 @@ model User {
   email String @unique
   password String
   name String?
+  phoneNumber String?      
+  profileImage String?
   role Role @default(STUDENT)
   birthDate DateTime?
   createdAt   DateTime     @default(now())
   enrollments Enrollment[]
+  notificationReads NotificationRead[]
 }
 
 enum Role {
@@ -85,4 +88,30 @@ model LiveSession {
   link      String?
   isActive  Boolean   @default(false)
   startedAt DateTime?
+}
+
+enum NotificationType {
+  LIVE_SESSION
+}
+
+model Notification {
+  id        String            @id @default(uuid())
+  type      NotificationType
+  title     String
+  message   String?
+  link      String?
+  createdAt DateTime          @default(now())
+
+  reads     NotificationRead[]
+}
+
+model NotificationRead {
+  id             String       @id @default(uuid())
+  notificationId String
+  notification   Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  readAt         DateTime     @default(now())
+
+  @@unique([notificationId, userId])
 }

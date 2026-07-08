@@ -25,17 +25,29 @@ export const validateCreateUser = (req, res, next) => {
 };
 
 export const validateUpdateProfile = (req, res, next) => {
-  const { name, email } = req.body;
+  const { name, email, phoneNumber, birthDate } = req.body;
 
   if (name !== undefined && name.trim().length < 3) {
     return next(new ApiError(400, 'يجب أن يحتوي الاسم على 3 أحرف على الأقل'));
   }
-  if (email !== undefined) {
+  
+  if (email !== undefined && email !== "") {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return next(new ApiError(400, 'يرجى إدخال بريد إلكتروني صحيح'));
     }
   }
+
+  // Changed: Now it only runs the Regex if phoneNumber has actual text in it
+  if (phoneNumber && phoneNumber.trim() !== "" && !/^\+?[0-9\s-]{6,20}$/.test(phoneNumber)) {
+    return next(new ApiError(400, 'رقم الهاتف غير صالح'));
+  }
+  
+  // Changed: Now it only parses the date if birthDate has actual text in it
+  if (birthDate && birthDate.trim() !== "" && isNaN(Date.parse(birthDate))) {
+    return next(new ApiError(400, 'تاريخ الميلاد غير صالح'));
+  }
+
   next();
 };
 
