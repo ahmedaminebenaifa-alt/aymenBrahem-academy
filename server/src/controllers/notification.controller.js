@@ -15,3 +15,14 @@ export const readAll = asyncHandler(async (req, res) => {
   const result = await notificationService.markAllAsRead(req.user.id);
   res.status(200).json({ status: 'success', message: result.message });
 });
+
+export const createAnnouncement = asyncHandler(async (req, res) => {
+  const { type, title, message, scheduledFor, link } = req.body;
+  const notification = await notificationService.createAnnouncement({ type, title, message, scheduledFor, link });
+  res.status(201).json({ status: 'success', notification });
+});
+
+export const getUpcomingAnnouncements = asyncHandler(async (req, res) => {
+  const announcements = await notificationService.getUpcomingAnnouncements();
+  res.status(200).json({ status: 'success', data: announcements });
+});

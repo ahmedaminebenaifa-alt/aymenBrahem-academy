@@ -25,6 +25,7 @@ model User {
   createdAt   DateTime     @default(now())
   enrollments Enrollment[]
   notificationReads NotificationRead[]
+  hostedSessions LiveSession[]
 }
 
 enum Role {
@@ -46,6 +47,7 @@ model Course {
 
   files        CourseFile[]
   enrollments  Enrollment[]
+  liveSessions LiveSession[]
 
 }
 
@@ -82,16 +84,41 @@ model Enrollment {
   @@index([courseId])
 }
 
+enum LiveSessionStatus {
+  SCHEDULED
+  LIVE
+  ENDED
+  CANCELLED
+}
+
 model LiveSession {
-  id        String    @id @default(uuid())
-  title     String?
-  link      String?
-  isActive  Boolean   @default(false)
-  startedAt DateTime?
+  id           String            @id @default(uuid())
+  title        String
+  roomName     String            @unique
+  status       LiveSessionStatus @default(SCHEDULED)
+
+  hostId       String
+  host         User              @relation(fields: [hostId], references: [id])
+
+  courseId     String?
+  course       Course?           @relation(fields: [courseId], references: [id])
+
+  recordingUrl String?
+  scheduledAt  DateTime?
+  startedAt    DateTime?
+  endedAt      DateTime?
+
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  @@index([status])
 }
 
 enum NotificationType {
   LIVE_SESSION
+  ANNOUNCEMENT_LIVE     
+  ANNOUNCEMENT_COURSE   
+  ANNOUNCEMENT_GENERAL
 }
 
 model Notification {
@@ -101,7 +128,8 @@ model Notification {
   message   String?
   link      String?
   createdAt DateTime          @default(now())
-
+  expiresAt    DateTime?
+  scheduledFor DateTime?
   reads     NotificationRead[]
 }
 

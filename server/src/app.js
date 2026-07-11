@@ -8,6 +8,7 @@ import { errorHandler } from './middleware/error.middleware.js';
 import { ApiError } from './utils/ApiError.js';
 import { fileURLToPath } from 'url';
 
+
 const app = express();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -50,8 +51,13 @@ app.use(cors({
 // ============================================================
 // 2. Request Parsers
 // ============================================================
+
+app.use((req, res, next) => {
+  if (req.path === '/api/live/webhook') return next(); // raw body handled in live.routes.js
+  express.json({ limit: '10kb' })(req, res, next);
+});
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
-app.use(express.json({ limit: '10kb' }));
+
 
 // ============================================================
 // 3. Rate Limiter (Applied globally to all /api endpoints)
@@ -77,6 +83,7 @@ app.get('/health', (req, res) => {
 // ============================================================
 // 5. App Routes & Static Files
 // ============================================================
+
 app.use('/api', routes);
 
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads'), {
