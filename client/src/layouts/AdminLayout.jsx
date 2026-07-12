@@ -1,18 +1,26 @@
+import React from 'react';
 import { Outlet } from 'react-router-dom';
+import { SidebarProvider } from '../context/SidebarContext';
+import Sidebar from '../components/dashboard/shared/Sidebar';
+import TopAppBar from '../components/dashboard/shared/TopAppBar';
 
-export default function AdminLayout() {
+const AdminLayout = () => {
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-body-md" dir="rtl">
-      {/* Temporary minimal header for Admin */}
-      <header className="bg-white border-b border-slate-200 px-8 py-4 flex justify-between items-center">
-        <h1 className="font-bold text-lg text-slate-800">بوابة الإدارة العامة</h1>
-        <span className="text-xs bg-slate-100 px-3 py-1 rounded-full text-slate-600 font-semibold">Admin Panel Portal</span>
-      </header>
-
-      {/* The main workspace canvas where admin pages will inject */}
-      <main className="p-8">
-        <Outlet />
-      </main>
-    </div>
+    <SidebarProvider>
+      <div dir="rtl" className="min-h-screen bg-surface text-on-surface font-body flex overflow-x-hidden">
+        <Sidebar />
+        <div className="flex-1 md:mr-64 flex flex-col min-h-screen w-full">
+          <TopAppBar />
+          <main className="p-8 flex-1 bg-surface-container-low/30">
+            <Outlet />
+          </main>
+          <footer className="px-8 py-6 border-t border-outline-variant/30 text-xs text-on-surface-variant flex justify-between">
+            <p>© 2026 أكاديمية أيمن براهيم للعلوم الشرعية. جميع الحقوق محفوظة.</p>
+          </footer>
+        </div>
+      </div>
+    </SidebarProvider>
   );
-}
+};
+
+export default AdminLayout;

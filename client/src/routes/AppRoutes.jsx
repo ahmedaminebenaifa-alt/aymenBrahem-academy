@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 
 // Public Pages
 import Home from '../pages/Home';
+import LiveSession from '../pages/LiveSession';
 // import AuthSection from '../components/AuthSection'; // Add this if it's on a separate route
 
 // Security Wrapper
@@ -12,12 +13,21 @@ import StudentLayout from '../layouts/StudentLayout';
 import AdminLayout from '../layouts/AdminLayout';
 
 // Student Pages
-import StudentOverview from '../pages/dashboard/student/Overview';
-import MyCourses from '../pages/dashboard/student/MyCourses';
+
+import StudentDashboard from '../pages/dashboard/student/StudentDashboard';
 import StudentSettings from '../pages/dashboard/student/Settings';
+import CoursePlayerPage from '../pages/dashboard/student/CoursePlayerPage';
+import MyCourses from '../pages/dashboard/student/MyCourses';
+import EditCoursePage from '../pages/dashboard/admin/EditCoursePage';
 
 // Admin Pages (Placeholders for later)
-import AdminOverview from '../pages/dashboard/admin/Overview';
+import AdminHome from '../pages/dashboard/admin/adminHome';
+import CreateCoursePage from '../pages/dashboard/admin/CreateCoursePage';
+import CourseManagerPage from '../pages/dashboard/admin/CourseManagerPage';
+import UserManagerPage from '../pages/dashboard/admin/UserManagerPage';
+import AdminSettings from '../pages/dashboard/admin/Settings';
+import LiveManager from '../pages/dashboard/admin/LiveManager';
+
 
 export default function AppRoutes() {
   return (
@@ -27,7 +37,7 @@ export default function AppRoutes() {
       {/* ------------------------------------------- */}
       <Route path="/" element={<Home />} />
       {/* <Route path="/login" element={<AuthSection />} /> */}
-
+      <Route path="/live" element={<LiveSession />} />
       {/* ------------------------------------------- */}
       {/* 2. STUDENT DASHBOARD (Nested Routing)       */}
       {/* ------------------------------------------- */}
@@ -40,10 +50,11 @@ export default function AppRoutes() {
         }
       >
         {/* The 'index' route loads automatically at /dashboard/student */}
-        <Route index element={<StudentOverview />} />
+        <Route index element={<StudentDashboard />} />
         
         {/* Loads at /dashboard/student/courses */}
         <Route path="courses" element={<MyCourses />} />
+        <Route path="courses/:courseId" element={<CoursePlayerPage />} />
         
         {/* Loads at /dashboard/student/settings */}
         <Route path="settings" element={<StudentSettings />} />
@@ -60,8 +71,13 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       >
-        <Route index element={<AdminOverview />} />
-        {/* Add ManageCourses, Users, etc., here later */}
+        <Route index element={<AdminHome />} />
+        <Route path="live-management" element={<LiveManager />} />
+        <Route path='courses/add' element={<CreateCoursePage />} />
+        <Route path="courses" element={<CourseManagerPage />} />
+        <Route path="courses/:id/edit" element={<EditCoursePage />} />
+        <Route path="users" element={<UserManagerPage />} />
+        <Route path="settings" element={<AdminSettings />} />
       </Route>
 
       {/* ------------------------------------------- */}

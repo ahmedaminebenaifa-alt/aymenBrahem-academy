@@ -8,6 +8,7 @@ export default function AuthSection() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -16,7 +17,7 @@ export default function AuthSection() {
     e.preventDefault();
     setError('');
     setIsLoading(true);
-    
+
     try {
       if (mode === 'login') {
         await login(email, password);
@@ -29,6 +30,12 @@ export default function AuthSection() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const switchMode = (newMode) => {
+    setMode(newMode);
+    setError('');
+    setShowPassword(false);
   };
 
   // --------------------------------------------------------
@@ -79,9 +86,8 @@ export default function AuthSection() {
     <section id="auth" className="py-24 relative overflow-hidden bg-[var(--surface-container-low)]">
       <div className="absolute inset-0 pattern-overlay pointer-events-none opacity-50" />
       <div className="max-w-[1280px] mx-auto px-6 relative z-10">
-        
+
         <div className="bg-[var(--surface-container-lowest)] rounded-3xl p-8 md:p-12 border border-[var(--outline-variant)]/30 shadow-2xl max-w-md mx-auto relative overflow-hidden">
-          {/* Decorative Top Accent */}
           <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[var(--primary)] to-[var(--on-tertiary-container)]" />
 
           <div className="text-center mb-8">
@@ -89,15 +95,14 @@ export default function AuthSection() {
               {mode === 'login' ? 'تسجيل الدخول' : 'حساب جديد'}
             </h2>
             <p className="text-[var(--on-surface-variant)] text-sm">
-              {mode === 'login' 
-                ? 'مرحباً بعودتك إلى صرح العلم والمعرفة' 
+              {mode === 'login'
+                ? 'مرحباً بعودتك إلى صرح العلم والمعرفة'
                 : 'انضم إلينا وابدأ رحلتك في طلب العلم'}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            
-            {/* Conditional Name Input */}
+
             {mode === 'register' && (
               <div className="relative">
                 <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-[var(--outline)]">
@@ -109,12 +114,13 @@ export default function AuthSection() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
-                  className="w-full bg-[var(--surface)] border border-[var(--outline-variant)] rounded-xl py-3 pr-12 pl-4 text-right focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all"
+                  disabled={isLoading}
+                  autoComplete="name"
+                  className="w-full bg-[var(--surface)] border border-[var(--outline-variant)] rounded-xl py-3 pr-12 pl-4 text-right focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all disabled:opacity-60"
                 />
               </div>
             )}
 
-            {/* Email Input */}
             <div className="relative">
               <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-[var(--outline)]">
                 mail
@@ -125,28 +131,48 @@ export default function AuthSection() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full bg-[var(--surface)] border border-[var(--outline-variant)] rounded-xl py-3 pr-12 pl-4 text-right focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all text-left"
+                disabled={isLoading}
+                autoComplete="email"
+                className="w-full bg-[var(--surface)] border border-[var(--outline-variant)] rounded-xl py-3 pr-12 pl-4 text-right focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all text-left disabled:opacity-60"
                 dir="ltr"
               />
             </div>
 
-            {/* Password Input */}
             <div className="relative">
               <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-[var(--outline)]">
                 lock
               </span>
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 placeholder="كلمة المرور"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full bg-[var(--surface)] border border-[var(--outline-variant)] rounded-xl py-3 pr-12 pl-4 text-right focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all text-left"
+                disabled={isLoading}
+                autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                minLength={mode === 'register' ? 8 : undefined}
+                className="w-full bg-[var(--surface)] border border-[var(--outline-variant)] rounded-xl py-3 pr-12 pl-12 text-right focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all text-left disabled:opacity-60"
                 dir="ltr"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                tabIndex={-1}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--outline)] hover:text-[var(--on-surface)] transition-colors"
+                aria-label={showPassword ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
+              >
+                <span className="material-symbols-outlined text-xl">
+                  {showPassword ? 'visibility_off' : 'visibility'}
+                </span>
+              </button>
             </div>
 
-            {/* Error Message */}
+            {mode === 'register' && (
+              <p className="text-xs text-[var(--outline)] -mt-1 px-1">
+                يجب أن تتكون كلمة المرور من 8 أحرف على الأقل
+              </p>
+            )}
+
             {error && (
               <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm flex items-center gap-2 border border-red-100">
                 <span className="material-symbols-outlined text-lg">error</span>
@@ -154,9 +180,8 @@ export default function AuthSection() {
               </div>
             )}
 
-            {/* Submit Button */}
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={isLoading}
               className="mt-2 w-full bg-[var(--primary)] text-[var(--on-primary)] py-3 rounded-xl font-bold hover:shadow-lg hover:opacity-95 active:scale-[0.98] transition-all flex justify-center items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
             >
@@ -168,14 +193,14 @@ export default function AuthSection() {
             </button>
           </form>
 
-          {/* Form Footer / Toggle */}
           <div className="mt-8 text-center text-sm text-[var(--on-surface-variant)] border-t border-[var(--outline-variant)]/30 pt-6">
             {mode === 'login' ? (
               <p>
                 ليس لديك حساب؟{' '}
-                <button 
-                  onClick={() => { setMode('register'); setError(''); }}
-                  className="text-[var(--on-tertiary-container)] font-bold hover:underline"
+                <button
+                  onClick={() => switchMode('register')}
+                  disabled={isLoading}
+                  className="text-[var(--on-tertiary-container)] font-bold hover:underline disabled:opacity-60"
                 >
                   سجل الآن
                 </button>
@@ -183,9 +208,10 @@ export default function AuthSection() {
             ) : (
               <p>
                 لديك حساب بالفعل؟{' '}
-                <button 
-                  onClick={() => { setMode('login'); setError(''); }}
-                  className="text-[var(--primary)] font-bold hover:underline"
+                <button
+                  onClick={() => switchMode('login')}
+                  disabled={isLoading}
+                  className="text-[var(--primary)] font-bold hover:underline disabled:opacity-60"
                 >
                   تسجيل الدخول
                 </button>

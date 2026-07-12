@@ -1,13 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useProfileSettings } from '../../../hooks/useProfileSettings';
 
-export default function Settings() {
+export default function AdminSettings() {
   const {
     user,
     updateProfile,
     changePassword,
-    uploadAvatar,          
-    isUploadingAvatar,     
     isSavingProfile,
     isSavingPassword,
     profileError,
@@ -16,19 +14,12 @@ export default function Settings() {
     passwordSuccess,
   } = useProfileSettings();
 
-  const [profileForm, setProfileForm] = useState({ name: '', email: '', phoneNumber: '', birthDate: '' });
+  const [profileForm, setProfileForm] = useState({ name: '', email: '' });
   const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
   const [passwordMismatch, setPasswordMismatch] = useState(false);
 
   useEffect(() => {
-    if (user) {
-      setProfileForm({
-        name: user.name || '',
-        email: user.email || '',
-        phoneNumber: user.phoneNumber || '',
-        birthDate: user.birthDate ? user.birthDate.split('T')[0] : '',
-      });
-    }
+    if (user) setProfileForm({ name: user.name || '', email: user.email || '' });
   }, [user]);
 
   const handleProfileSubmit = (e) => {
@@ -50,49 +41,17 @@ export default function Settings() {
     });
   };
 
-
-  const handleAvatarChange = (e) => {
-    const file = e.target.files[0];
-    if (file) uploadAvatar(file);
-  };
-
-
   return (
-    <div className="max-w-3xl mx-auto space-y-8 py-4">
+    <div className="max-w-3xl space-y-8">
       <div>
-        <h2 className="font-display font-bold text-2xl text-primary mb-1">الإعدادات</h2>
-        <p className="text-on-surface-variant text-sm">إدارة معلومات حسابك وكلمة المرور</p>
+        <h2 className="font-arabic font-bold text-2xl text-primary mb-1">الإعدادات</h2>
+        <p className="text-on-surface-variant text-sm">إدارة معلومات حساب المدير وكلمة المرور</p>
       </div>
 
-      <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-[4px] shadow-sm overflow-hidden border-t-2 border-tertiary p-6 flex items-center gap-5">
-        <div className="relative w-20 h-20 shrink-0">
-          {user?.profileImage ? (
-            <img src={user.profileImage} alt={user.name} className="w-20 h-20 rounded-full object-cover border border-outline-variant/30" />
-          ) : (
-            <div className="w-20 h-20 rounded-full bg-primary-container/20 flex items-center justify-center text-primary font-bold text-2xl">
-              {user?.name?.charAt(0) || 'ط'}
-            </div>
-          )}
-          {isUploadingAvatar && (
-            <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center">
-              <span className="material-symbols-outlined animate-spin text-white text-lg">progress_activity</span>
-            </div>
-          )}
-        </div>
-        <div>
-          <p className="text-sm font-bold text-on-surface mb-1">الصورة الشخصية</p>
-          <label className="inline-block px-4 py-2 bg-surface-container-low text-on-surface-variant text-xs font-bold rounded-[4px] cursor-pointer hover:bg-surface-container-high transition-colors">
-            تغيير الصورة
-            <input type="file" accept="image/jpeg, image/png" onChange={handleAvatarChange} className="hidden" />
-          </label>
-        </div>
-      </div>
-
-      {/* Profile Info Card */}
-      <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-[4px] shadow-sm overflow-hidden border-t-2 border-tertiary">
+      <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-[4px] shadow-sm overflow-hidden border-t-2 border-t-tertiary">
         <div className="flex items-center gap-3 px-6 py-5 bg-surface-container-low/40 border-b border-outline-variant/20">
           <div className="w-1 h-5 bg-tertiary rounded-full" />
-          <h3 className="font-display font-bold text-lg text-primary">البيانات الشخصية</h3>
+          <h3 className="font-arabic font-bold text-lg text-primary">البيانات الشخصية</h3>
         </div>
 
         <form onSubmit={handleProfileSubmit} className="p-6 space-y-5">
@@ -115,28 +74,6 @@ export default function Settings() {
               className="w-full bg-surface-container-low/60 border border-outline-variant/30 rounded-[4px] px-4 py-3 text-sm text-on-surface focus:outline-none focus:border-tertiary focus:ring-1 focus:ring-tertiary transition-all"
             />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div>
-              <label className="block text-sm font-bold text-on-surface mb-2">رقم الهاتف</label>
-              <input
-                type="tel"
-                value={profileForm.phoneNumber}
-                onChange={(e) => setProfileForm((p) => ({ ...p, phoneNumber: e.target.value }))}
-                dir="ltr"
-                className="w-full bg-surface-container-low/60 border border-outline-variant/30 rounded-[4px] px-4 py-3 text-sm text-on-surface focus:outline-none focus:border-tertiary focus:ring-1 focus:ring-tertiary transition-all text-left"
-                placeholder="+216 12 345 678"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-on-surface mb-2">تاريخ الميلاد</label>
-              <input
-                type="date"
-                value={profileForm.birthDate}
-                onChange={(e) => setProfileForm((p) => ({ ...p, birthDate: e.target.value }))}
-                className="w-full bg-surface-container-low/60 border border-outline-variant/30 rounded-[4px] px-4 py-3 text-sm text-on-surface focus:outline-none focus:border-tertiary focus:ring-1 focus:ring-tertiary transition-all"
-              />
-            </div>
-          </div>
 
           {profileError && <p className="text-sm text-error font-bold">{profileError}</p>}
           {profileSuccess && <p className="text-sm text-primary font-bold">تم حفظ التغييرات بنجاح</p>}
@@ -154,11 +91,10 @@ export default function Settings() {
         </form>
       </div>
 
-      {/* Password Card */}
-      <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-[4px] shadow-sm overflow-hidden border-t-2 border-tertiary">
+      <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-[4px] shadow-sm overflow-hidden border-t-2 border-t-tertiary">
         <div className="flex items-center gap-3 px-6 py-5 bg-surface-container-low/40 border-b border-outline-variant/20">
           <div className="w-1 h-5 bg-tertiary rounded-full" />
-          <h3 className="font-display font-bold text-lg text-primary">تغيير كلمة المرور</h3>
+          <h3 className="font-arabic font-bold text-lg text-primary">تغيير كلمة المرور</h3>
         </div>
 
         <form onSubmit={handlePasswordSubmit} className="p-6 space-y-5">

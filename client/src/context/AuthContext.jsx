@@ -57,13 +57,16 @@ export const AuthProvider = ({ children }) => {
     window.location.href = '/';
   };
 
+  const updateUser = (updatedFields) => {
+    setUser((prev) => ({ ...prev, ...updatedFields }));
+  };
   // Prevent flashing the login screen while checking local storage on refresh
   if (isInitializing) {
     return <div className="flex justify-center items-center h-screen">جاري التحميل...</div>;
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout }}>
+    <AuthContext.Provider value={{ user, login, register, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );
