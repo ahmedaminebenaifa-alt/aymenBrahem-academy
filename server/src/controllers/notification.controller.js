@@ -26,3 +26,14 @@ export const getUpcomingAnnouncements = asyncHandler(async (req, res) => {
   const announcements = await notificationService.getUpcomingAnnouncements();
   res.status(200).json({ status: 'success', data: announcements });
 });
+
+export const updateAnnouncement = asyncHandler(async (req, res) => {
+  const { type, title, message, scheduledFor, link } = req.body;
+  const notification = await notificationService.updateAnnouncement(req.params.id, { type, title, message, scheduledFor, link });
+  res.status(200).json({ status: 'success', notification });
+});
+
+export const deleteAnnouncement = asyncHandler(async (req, res) => {
+  await notificationService.deleteAnnouncement(req.params.id);
+  res.status(200).json({ status: 'success' });
+});

@@ -14,16 +14,25 @@ function formatDateTime(dateStr) {
   });
 }
 
+// Convert an ISO date string to the format <input type="datetime-local"> expects
+function toDatetimeLocalValue(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+const emptyForm = { type: 'ANNOUNCEMENT_LIVE', title: '', message: '', scheduledFor: '' };
+
 const UpcomingSessions = () => {
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
 
-  const [title, setTitle] = useState('');
-  const [message, setMessage] = useState('');
-  const [scheduledFor, setScheduledFor] = useState('');
-  const [type, setType] = useState('ANNOUNCEMENT_LIVE');
+  const [editingId, setEditingId] = useState(null); // null = create mode, id = edit mode
+  const [form, setForm] = useState(emptyForm);
 
   const fetchAnnouncements = async () => {
     try {
@@ -40,22 +49,58 @@ const UpcomingSessions = () => {
     fetchAnnouncements();
   }, []);
 
-  const handleAddAnnouncement = async (e) => {
+  const openCreateModal = () => {
+    setEditingId(null);
+    setForm(emptyForm);
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (a) => {
+    setEditingId(a.id);
+    setForm({
+      type: a.type,
+      title: a.title,
+      message: a.message || '',
+      scheduledFor: toDatetimeLocalValue(a.scheduledFor),
+    });
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setEditingId(null);
+    setForm(emptyForm);
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!title || !scheduledFor) return;
+    if (!form.title || !form.scheduledFor) return;
     setSaving(true);
     try {
-      await api.post('/notifications/announcements', { type, title, message, scheduledFor });
+      if (editingId) {
+        await api.patch(`/notifications/announcements/${editingId}`, form);
+      } else {
+        await api.post('/notifications/announcements', form);
+      }
       await fetchAnnouncements();
-      setTitle('');
-      setMessage('');
-      setScheduledFor('');
-      setType('ANNOUNCEMENT_LIVE');
-      setIsModalOpen(false);
+      closeModal();
     } catch (err) {
       alert(err.response?.data?.message || 'فشل حفظ الإعلان');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('هل أنت متأكد من حذف هذا الإعلان؟')) return;
+    setDeletingId(id);
+    try {
+      await api.delete(`/notifications/announcements/${id}`);
+      setAnnouncements((prev) => prev.filter((a) => a.id !== id));
+    } catch (err) {
+      alert(err.response?.data?.message || 'فشل حذف الإعلان');
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -83,17 +128,36 @@ const UpcomingSessions = () => {
           {announcements.map((a) => {
             const meta = TYPE_META[a.type] || TYPE_META.ANNOUNCEMENT_GENERAL;
             return (
-              <div key={a.id} className="flex gap-4 p-3 rounded-lg border border-outline-variant/20 bg-surface-container-lowest hover:border-primary/30 transition-colors">
+              <div key={a.id} className="group flex gap-4 p-3 rounded-lg border border-outline-variant/20 bg-surface-container-lowest hover:border-primary/30 transition-colors">
                 <div className={`bg-surface-container w-12 h-12 rounded-lg flex items-center justify-center shrink-0 ${meta.color}`}>
                   <span className="material-symbols-outlined text-xl">{meta.icon}</span>
                 </div>
-                <div>
-                  <p className="font-bold text-on-surface text-sm mb-1">{a.title}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-on-surface text-sm mb-1 truncate">{a.title}</p>
                   <div className="flex items-center gap-3 text-xs text-on-surface-variant font-medium">
                     <span>{formatDateTime(a.scheduledFor)}</span>
                     <span className="w-1 h-1 bg-outline rounded-full"></span>
                     <span>{meta.label}</span>
                   </div>
+                </div>
+                <div className="flex items-start gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                  <button
+                    onClick={() => openEditModal(a)}
+                    className="text-on-surface-variant hover:text-primary p-1.5 rounded-md hover:bg-primary/10 transition-colors"
+                    title="تعديل"
+                  >
+                    <span className="material-symbols-outlined text-lg">edit</span>
+                  </button>
+                  <button
+                    onClick={() => handleDelete(a.id)}
+                    disabled={deletingId === a.id}
+                    className="text-on-surface-variant hover:text-red-600 p-1.5 rounded-md hover:bg-red-50 transition-colors disabled:opacity-50"
+                    title="حذف"
+                  >
+                    <span className="material-symbols-outlined text-lg">
+                      {deletingId === a.id ? 'hourglass_empty' : 'delete'}
+                    </span>
+                  </button>
                 </div>
               </div>
             );
@@ -102,7 +166,7 @@ const UpcomingSessions = () => {
       )}
 
       <button
-        onClick={() => setIsModalOpen(true)}
+        onClick={openCreateModal}
         className="w-full mt-4 py-2.5 text-sm font-bold text-primary border border-primary/20 rounded-lg hover:bg-primary/5 transition-colors flex items-center justify-center gap-1"
       >
         <span className="material-symbols-outlined text-sm">add</span>
@@ -113,21 +177,23 @@ const UpcomingSessions = () => {
         <div className="fixed inset-0 bg-primary/20 backdrop-blur-sm flex justify-center items-center z-50 p-4">
           <div className="bg-surface rounded-xl border border-outline-variant/30 shadow-xl w-full max-w-md overflow-hidden text-right">
             <div className="bg-surface-container-low px-6 py-4 border-b border-outline-variant/20 flex justify-between items-center flex-row-reverse">
-              <h4 className="font-arabic font-bold text-on-surface text-base">إعلان جديد للطلاب</h4>
+              <h4 className="font-arabic font-bold text-on-surface text-base">
+                {editingId ? 'تعديل الإعلان' : 'إعلان جديد للطلاب'}
+              </h4>
               <button
-                onClick={() => setIsModalOpen(false)}
+                onClick={closeModal}
                 className="text-on-surface-variant hover:text-on-surface material-symbols-outlined text-xl p-1 rounded-md hover:bg-surface-container-high transition-all"
               >
                 close
               </button>
             </div>
 
-            <form onSubmit={handleAddAnnouncement} className="p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div>
                 <label className="block text-xs font-bold text-on-surface-variant mb-1.5">نوع الإعلان</label>
                 <select
-                  value={type}
-                  onChange={(e) => setType(e.target.value)}
+                  value={form.type}
+                  onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))}
                   className="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary/50 text-on-surface"
                 >
                   <option value="ANNOUNCEMENT_LIVE">بث مباشر قادم</option>
@@ -142,8 +208,8 @@ const UpcomingSessions = () => {
                   type="text"
                   required
                   placeholder="مثال: سأبث مباشرة شرح كتاب التوحيد"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
+                  value={form.title}
+                  onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
                   className="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary/50 text-on-surface"
                 />
               </div>
@@ -153,8 +219,8 @@ const UpcomingSessions = () => {
                 <textarea
                   rows={2}
                   placeholder="أي تفاصيل تريد إضافتها للطلاب"
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
+                  value={form.message}
+                  onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))}
                   className="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary/50 text-on-surface"
                 />
               </div>
@@ -164,8 +230,8 @@ const UpcomingSessions = () => {
                 <input
                   type="datetime-local"
                   required
-                  value={scheduledFor}
-                  onChange={(e) => setScheduledFor(e.target.value)}
+                  value={form.scheduledFor}
+                  onChange={(e) => setForm((f) => ({ ...f, scheduledFor: e.target.value }))}
                   className="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary/50 text-on-surface"
                 />
               </div>
@@ -176,11 +242,11 @@ const UpcomingSessions = () => {
                   disabled={saving}
                   className="bg-primary text-on-primary font-bold text-sm px-5 py-2.5 rounded-lg hover:bg-primary-container transition-all disabled:opacity-60"
                 >
-                  {saving ? 'جاري الحفظ...' : 'نشر الإعلان'}
+                  {saving ? 'جاري الحفظ...' : editingId ? 'حفظ التعديلات' : 'نشر الإعلان'}
                 </button>
                 <button
                   type="button"
-                  onClick={() => setIsModalOpen(false)}
+                  onClick={closeModal}
                   className="bg-surface-container text-on-surface-variant font-bold text-sm px-5 py-2.5 rounded-lg hover:bg-surface-container-high transition-all"
                 >
                   إلغاء
