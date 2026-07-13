@@ -74,7 +74,7 @@ const StudentDashboard = () => {
     <div className="relative">
       <EngravedBackground color="var(--primary-container)" opacity={0.06} animated={false} />
 
-      <div className="relative z-10 max-w-7xl mx-auto space-y-8 pb-12 animate-fade-up">
+      <div className="relative z-10 w-full space-y-8 pb-12 animate-fade-up">
 
         {/* 1. Welcome banner */}
         <WelcomeHeader
@@ -86,7 +86,7 @@ const StudentDashboard = () => {
         <LiveWidget />
 
         {/* 3. Courses section */}
-        <div className="rounded-xl p-1 md:p-4">
+        <div className="max-w-7xl mx-auto bg-surface-container-lowest/50 rounded-xl p-1 md:p-4">
           <CourseFilterBar
             title="الدورات المتاحة"
             activeFilter={activeFilter}

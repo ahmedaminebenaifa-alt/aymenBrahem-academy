@@ -27,6 +27,7 @@ import CourseManagerPage from '../pages/dashboard/admin/CourseManagerPage';
 import UserManagerPage from '../pages/dashboard/admin/UserManagerPage';
 import AdminSettings from '../pages/dashboard/admin/Settings';
 import LiveManager from '../pages/dashboard/admin/LiveManager';
+import PendingOrders from '../pages/dashboard/admin/PendingOrders';
 
 
 export default function AppRoutes() {
@@ -78,6 +79,7 @@ export default function AppRoutes() {
         <Route path="courses/:id/edit" element={<EditCoursePage />} />
         <Route path="users" element={<UserManagerPage />} />
         <Route path="settings" element={<AdminSettings />} />
+        <Route path="orders/pending" element={<PendingOrders />} />
       </Route>
 
       {/* ------------------------------------------- */}

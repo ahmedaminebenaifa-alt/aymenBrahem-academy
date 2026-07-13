@@ -81,3 +81,10 @@ export const deleteCourse = asyncHandler(async (req, res) => {
   await courseService.deleteCourse(req.params.id);
   res.status(204).send(); // 204 No Content (standard for successful DELETE requests)
 });
+
+export const searchCourses = asyncHandler(async (req, res) => {
+  const { q } = req.query;
+  const isAdmin = req.user?.role === 'ADMIN';
+  const results = await courseService.searchCourses(q, isAdmin);
+  res.status(200).json({ status: 'success', data: results });
+});

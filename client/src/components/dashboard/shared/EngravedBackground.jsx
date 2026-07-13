@@ -1,23 +1,13 @@
 import React, { useId } from 'react';
 
-/**
- * Reusable Alhambra-style engraved نقوش background layer.
- * Drop it as the first child of any `relative` container — it fills via absolute inset-0.
- *
- * @param {string} color - stroke color (hex or CSS var), defaults to gold for dark surfaces
- * @param {number} opacity - overall layer opacity, defaults tuned for dark surfaces (0.15)
- * @param {boolean} animated - whether the ambient pan animation runs
- */
 export default function EngravedBackground({
-  color = '#d4af37',
-  opacity = 0.15,
-  animated = true,
+  color = '#e2b4bd',
+  opacity = 0.25,
+  animated = false,
 }) {
-  // useId ensures unique SVG def IDs even if this component renders multiple times on one page —
-  // duplicate <pattern>/<filter> ids across instances would silently break rendering.
   const uid = useId();
-  const filterId = `carved-depth-${uid}`;
-  const patternId = `alhambra-engraving-${uid}`;
+  const filterId = `luxury-depth-${uid}`;
+  const patternId = `premium-lattice-${uid}`;
 
   return (
     <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
@@ -28,21 +18,38 @@ export default function EngravedBackground({
         style={{ opacity }}
       >
         <defs>
-          <filter id={filterId} x="-10%" y="-10%" width="120%" height="120%">
-            <feDropShadow dx="1" dy="1.5" stdDeviation="1" floodColor="#00140d" floodOpacity="0.8" />
-            <feDropShadow dx="-0.5" dy="-0.5" stdDeviation="0.5" floodColor="#ffffff" floodOpacity="0.1" />
+          <filter id={filterId} x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="1.5" dy="2" stdDeviation="1.5" floodColor="#000000" floodOpacity="0.95" />
+            <feDropShadow dx="-0.8" dy="-0.8" stdDeviation="0.8" floodColor="#ffffff" floodOpacity="0.15" />
           </filter>
 
           <pattern id={patternId} width="120" height="120" patternUnits="userSpaceOnUse" patternTransform="scale(0.8)">
             <g stroke={color} fill="none" filter={`url(#${filterId})`}>
-              <path strokeWidth="1" d="M60 0 L75 25 L100 25 L85 45 L95 70 L60 55 L25 70 L35 45 L20 25 L45 25 Z" opacity="0.6" />
-              <path strokeWidth="1.5" d="M60 120 L75 95 L100 95 L85 75 L95 50 L60 65 L25 50 L35 75 L20 95 L45 95 Z" opacity="0.6" />
-              <path strokeWidth="0.5" d="M0 60 L25 75 L25 100 L45 85 L70 95 L55 60 L70 25 L45 35 L25 20 L25 45 Z" opacity="0.4" />
-              <path strokeWidth="0.5" d="M120 60 L95 75 L95 100 L75 85 L50 95 L65 60 L50 25 L75 35 L95 20 L95 45 Z" opacity="0.4" />
-              <circle cx="60" cy="60" r="22" strokeWidth="0.75" opacity="0.5" />
-              <circle cx="60" cy="60" r="14" strokeWidth="1" />
-              <path strokeWidth="0.5" d="M46 46 L74 74 M46 74 L74 46 M60 38 L60 82 M38 60 L82 60" opacity="0.4" />
-              <path strokeWidth="0.5" d="M30 0 L0 30 L0 90 L30 120 L90 120 L120 90 L120 30 L90 0 Z" opacity="0.3" strokeDasharray="4 2" />
+              <path strokeWidth="0.8" opacity="0.4" d="M0 0 L120 120 M120 0 L0 120 M60 0 L60 120 M0 60 L120 60" />
+
+              <path strokeWidth="1.2" opacity="0.6" d="M60 0 L120 60 L60 120 L0 60 Z" />
+              <path strokeWidth="0.8" opacity="0.4" d="M30 0 L120 90 M0 30 L90 120 M90 0 L0 90 M120 30 L30 120" />
+              
+              <path strokeWidth="1.5" opacity="0.9" d="M60 15 L73 47 L105 60 L73 73 L60 105 L47 73 L15 60 L47 47 Z" />
+              <path strokeWidth="1.2" opacity="0.7" d="M30 30 L60 42 L90 30 L78 60 L90 90 L60 78 L30 90 L42 60 Z" />
+
+              <circle cx="60" cy="60" r="32" strokeWidth="0.8" strokeDasharray="4 4" opacity="0.5" />
+              <circle cx="60" cy="60" r="20" strokeWidth="1" opacity="0.8" />
+              <circle cx="60" cy="60" r="8" strokeWidth="1.5" opacity="1" />
+
+              <path strokeWidth="1" opacity="0.6" d="M0 25 L18 18 L25 0" />
+              <circle cx="0" cy="0" r="16" strokeWidth="1" opacity="0.5" />
+              
+              <path strokeWidth="1" opacity="0.6" d="M120 25 L102 18 L95 0" />
+              <circle cx="120" cy="0" r="16" strokeWidth="1" opacity="0.5" />
+              
+              <path strokeWidth="1" opacity="0.6" d="M0 95 L18 102 L25 120" />
+              <circle cx="0" cy="120" r="16" strokeWidth="1" opacity="0.5" />
+              
+              <path strokeWidth="1" opacity="0.6" d="M120 95 L102 102 L95 120" />
+              <circle cx="120" cy="120" r="16" strokeWidth="1" opacity="0.5" />
+
+              <path strokeWidth="0.8" opacity="0.3" d="M30 0 L30 120 M90 0 L90 120 M0 30 L120 30 M0 90 L120 90" />
             </g>
           </pattern>
         </defs>

@@ -13,7 +13,12 @@ export const useMyEnrollments = () => {
     setError(null);
     try {
       const { data } = await api.get('/enrollments/me', { signal });
-      setCourses(data.data);
+      const flattened = data.data.map((enrollment) => ({
+        ...enrollment.course,
+        enrolledAt: enrollment.enrolledAt,
+        resourcesCount: enrollment.course.files?.filter(f => f.url?.toLowerCase().endsWith('.pdf')).length || 0,
+      }));
+      setCourses(flattened);
     } catch (err) {
       if (err.code === 'ERR_CANCELED') return;
       setError(err.response?.data?.error || 'فشل في جلب دوراتك المسجلة');

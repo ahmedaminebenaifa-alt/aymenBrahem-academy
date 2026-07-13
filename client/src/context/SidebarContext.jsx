@@ -1,9 +1,17 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 
 const SidebarContext = createContext(null);
 
 export function SidebarProvider({ children }) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth >= 768 : true
+  );
+
+  useEffect(() => {
+    const mql = window.matchMedia('(min-width: 768px)');
+    const handleChange = (e) => setIsOpen(e.matches);
+  }, []);
+
   const toggle = () => setIsOpen((prev) => !prev);
   const close = () => setIsOpen(false);
 

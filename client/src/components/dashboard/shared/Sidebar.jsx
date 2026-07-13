@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { useSidebar } from '../../../context/SidebarContext';
+import { usePendingOrders } from '../../../hooks/usePendingOrders';
 
 const STUDENT_LINKS = [
   { to: '/dashboard/student', end: true, icon: 'dashboard', label: 'الرئيسية' },
@@ -12,6 +13,7 @@ const ADMIN_LINKS = [
   { to: '/dashboard/admin', end: true, icon: 'dashboard', label: 'نظرة عامة' },
   { to: '/dashboard/admin/live-management', icon: 'live_tv', label: 'الجلسات المباشرة' },
   { to: '/dashboard/admin/courses', end: true, icon: 'library_books', label: 'إدارة الدروس' },
+  { to: '/dashboard/admin/orders/pending', icon: 'receipt_long', label: 'طلبات الشراء' },
   { to: '/dashboard/admin/users', icon: 'group', label: 'إدارة المستخدمين' },
   { to: '/dashboard/admin/settings', icon: 'settings', label: 'الإعدادات' },
 ];
@@ -21,6 +23,8 @@ export default function Sidebar() {
   const { isOpen, close } = useSidebar();
   const isAdmin = user?.role === 'ADMIN';
   const links = isAdmin ? ADMIN_LINKS : STUDENT_LINKS;
+  
+  const { orders: pendingOrders } = isAdmin ? usePendingOrders() : { orders: [] };
 
   const navLinkClass = ({ isActive }) =>
     `flex items-center gap-3 px-4 py-3.5 rounded-lg font-medium text-sm transition-all duration-200 group relative ${
@@ -28,16 +32,20 @@ export default function Sidebar() {
         ? 'bg-[var(--primary-container)] text-[var(--on-primary-container)] font-semibold border-r-4 border-[var(--primary)]'
         : 'text-[var(--on-surface-variant)] hover:bg-[var(--surface-container)] hover:text-[var(--on-surface)]'
     }`;
+    
 
   return (
     <>
       {isOpen && (
-        <div className="fixed inset-0 bg-black/40 z-[90] md:hidden" onClick={close} />
+        <div
+          className="fixed inset-0 bg-black/40 z-[90] md:hidden"
+          onClick={close}
+        />
       )}
 
       <aside
         dir="rtl"
-        className={`fixed right-0 top-0 h-screen w-64 z-[100] bg-[var(--surface-container-low)] border-l border-[var(--outline-variant)]/30 flex flex-col py-10 shadow-xl md:shadow-sm transition-transform duration-300 md:translate-x-0 ${
+        className={`fixed right-0 top-0 h-screen w-64 z-[100] bg-[var(--surface-container-low)] border-l border-[var(--outline-variant)]/30 flex flex-col py-10 shadow-xl transition-transform duration-300 ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
@@ -77,17 +85,21 @@ export default function Sidebar() {
         </div>
 
         {/* --- Nav links --- */}
-        <nav className="flex-1 px-4 space-y-2.5 overflow-y-auto scrollbar-hide">
+        <nav className="flex-1 px-3 space-y-1.5 overflow-y-auto scrollbar-hide">
           {links.map((link) => (
             <NavLink key={link.to} to={link.to} end={link.end} className={navLinkClass} onClick={close}>
               <span className="material-symbols-outlined text-xl transition-transform group-hover:scale-110">
                 {link.icon}
               </span>
-              <span>{link.label}</span>
+              <span className="flex-1">{link.label}</span>
+              {link.to === '/dashboard/admin/orders/pending' && pendingOrders.length > 0 && (
+                <span className="bg-error text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                  {pendingOrders.length}
+                </span>
+              )}
             </NavLink>
           ))}
         </nav>
-
         {/* --- Admin primary action --- */}
         {isAdmin && (
           <div className="px-5 mt-8 mb-6">

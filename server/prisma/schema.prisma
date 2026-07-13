@@ -26,6 +26,8 @@ model User {
   enrollments Enrollment[]
   notificationReads NotificationRead[]
   hostedSessions LiveSession[]
+  orders          Order[]
+  approvedOrders  Order[] @relation("OrderApprovals")
 }
 
 enum Role {
@@ -48,7 +50,7 @@ model Course {
   files        CourseFile[]
   enrollments  Enrollment[]
   liveSessions LiveSession[]
-
+  orders          Order[]
 }
 
 enum CourseCategory {
@@ -142,4 +144,42 @@ model NotificationRead {
   readAt         DateTime     @default(now())
 
   @@unique([notificationId, userId])
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  FAILED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CARD
+  MANUAL
+  BANK_TRANSFER
+  POSTAL_TRANSFER
+}
+
+model Order {
+  id                String        @id @default(uuid())
+  userId            String
+  user              User          @relation(fields: [userId], references: [id])
+  courseId          String
+  course            Course        @relation(fields: [courseId], references: [id])
+  amount            Decimal       @db.Decimal(10, 2)
+  method            PaymentMethod
+  status            OrderStatus   @default(PENDING)
+
+  konnectPaymentRef String?       @unique
+  konnectPayUrl     String?
+
+  approvedById      String?
+  approvedBy        User?         @relation("OrderApprovals", fields: [approvedById], references: [id])
+
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  paidAt            DateTime?
+
+  @@index([status])
+  @@index([userId])
 }

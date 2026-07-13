@@ -23,8 +23,7 @@ const WelcomeHeader = ({
   };
 
   return (
-    <div className="relative p-[1px] bg-gradient-to-b from-transparent via-[#d4af37]/5 to-transparent">
-      
+    <div className="relative p-[1px] bg-gradient-to-b from-transparent via-[#d4af37]/5 to-transparent transition-all duration-300 ease-in-out">      
       {/* 
         Increased padding drastically (pb-48 md:pb-64) to give the gradient a massive 
         canvas to fade out smoothly over a long distance.
@@ -89,8 +88,7 @@ const WelcomeHeader = ({
           </div>
 
           {/* Central Ayah Presentation */}
-          <div className="relative w-full max-w-4xl py-10 px-8 animate-fade-up-cinematic delay-1 flex flex-col items-center justify-center group">
-            
+          <div className="relative w-full max-w-4xl py-10 px-8 mx-auto transition-[max-width] duration-300 ease-in-out animate-fade-up-cinematic delay-1 flex flex-col items-center justify-center group">            
             {/* Corner Engravings */}
             <svg className="absolute top-0 right-0 w-16 h-16 text-[#d4af37] opacity-45" viewBox="0 0 100 100" fill="none" filter="url(#carved-depth)">
               <path d="M100 0 H0 Q 40 0 50 50 Q 50 90 100 100 V0 Z" fill="currentColor" fillOpacity="0.05" stroke="currentColor" strokeWidth="1"/>

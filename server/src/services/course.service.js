@@ -76,16 +76,19 @@ export const getStudentCourses = async (userId) => {
     where: { published: true },
     include: {
       enrollments: {
-        where: { userId } // Only fetch the enrollment for this specific student
+        where: { userId }
+      },
+      files: {
+        select: { url: true }
       }
     },
     orderBy: { createdAt: 'desc' }
   });
 
-  // Map the results to inject the 'isEnrolled' boolean for the frontend
   return courses.map(course => {
     const isEnrolled = course.enrollments.length > 0;
-    
+    const pdfCount = course.files.filter(f => f.url?.toLowerCase().endsWith('.pdf')).length;
+
     return {
       id: course.id,
       title: course.title,
@@ -94,7 +97,8 @@ export const getStudentCourses = async (userId) => {
       isFree: course.isFree,
       price: course.price,
       coverImage: course.coverImage,
-      isEnrolled // Magic flag used to toggle UI buttons (Enroll vs. Start Learning)
+      isEnrolled,
+      resourcesCount: pdfCount
     };
   });
 };
@@ -103,33 +107,55 @@ export const getStudentCourses = async (userId) => {
  * Fetch course content (files) ONLY if the student is successfully enrolled
  */
 export const getCourseContent = async (courseId, userId) => {
-  // Security Check: Verify the student's enrollment in the database
   const enrollment = await prisma.enrollment.findUnique({
     where: {
-      userId_courseId: { userId, courseId } // Utilizing the compound unique index in your Prisma schema
+      userId_courseId: { userId, courseId }
     }
   });
 
-  // Kick out the user if they are not enrolled
-  /*if (!enrollment) {
+  if (!enrollment) {
     throw new ApiError(403, 'Access denied. You must enroll in this course to view its content.');
-  }*/
+  }
 
-  // FIXED: Fetch the full course metadata AND include its sorted files 
-  // This satisfies frontend requirements like course.title and course.files
   const courseWithFiles = await prisma.course.findUnique({
     where: { id: courseId },
     include: {
       files: {
-        orderBy: { order: 'asc' } // Ensures files appear in the correct sequence
+        orderBy: { order: 'asc' }
       }
     }
   });
 
-  // Handle edge case where enrollment exists but course was somehow missing
   if (!courseWithFiles) {
     throw new ApiError(404, 'Course content not found');
   }
 
   return courseWithFiles;
+};
+
+export const searchCourses = async (query, isAdmin) => {
+  if (!query || query.trim().length < 2) return [];
+
+  const where = {
+    OR: [
+      { title: { contains: query, mode: 'insensitive' } },
+      { description: { contains: query, mode: 'insensitive' } },
+    ],
+    ...(isAdmin ? {} : { published: true }),
+  };
+
+  return prisma.course.findMany({
+    where,
+    select: {
+      id: true,
+      title: true,
+      category: true,
+      coverImage: true,
+      isFree: true,
+      price: true,
+      published: true,
+    },
+    take: 8,
+    orderBy: { createdAt: 'desc' },
+  });
 };

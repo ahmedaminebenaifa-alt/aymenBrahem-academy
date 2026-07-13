@@ -3,6 +3,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Amiri+Quran&display=swap');
 
+
 /* 1. Tailwind v4 Theme Engine */
 @theme {
   --color-surface: #fcf9f8;
@@ -65,6 +66,7 @@ body {
   font-family: 'Be Vietnam Pro', sans-serif;
   background-color: var(--surface);
   color: var(--on-surface);
+  overflow-x: hidden;
 }
 
 .font-display {
@@ -77,6 +79,16 @@ body {
 
 .font-quran {
   font-family: 'Amiri Quran', 'Traditional Arabic', serif;
+}
+
+
+*::-webkit-scrollbar {
+  display: none !important;
+}
+
+* {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
 }
 
 /* 4. Icons — single definition, outlined by default, .filled opts into fill */
@@ -177,3 +189,4 @@ body {
     filter: none;
   }
 }
+
