@@ -4,20 +4,20 @@ export default function PendingOrders() {
   const { orders, loading, approve, reject } = usePendingOrders();
 
   const handleApprove = async (order) => {
-    if (!window.confirm(`تأكيد منح "${order.user.name}" حق الوصول إلى "${order.course.title}"؟`)) return;
+    if (!window.confirm(`تأكيد استلام الدفع من "${order.user.name}" وتفعيل "${order.course.title}"؟`)) return;
     try {
       await approve(order.id);
     } catch (err) {
-      alert(err.response?.data?.message || 'فشل في الموافقة على الطلب');
+      alert(err.response?.data?.message || 'فشل في تفعيل الدورة');
     }
   };
 
   const handleReject = async (order) => {
-    if (!window.confirm(`رفض طلب "${order.user.name}"؟`)) return;
+    if (!window.confirm(`إلغاء طلب "${order.user.name}"؟`)) return;
     try {
       await reject(order.id);
     } catch (err) {
-      alert(err.response?.data?.message || 'فشل في رفض الطلب');
+      alert(err.response?.data?.message || 'فشل في إلغاء الطلب');
     }
   };
 
@@ -34,9 +34,9 @@ export default function PendingOrders() {
   return (
     <div className="max-w-4xl">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-on-surface">طلبات الشراء اليدوية</h1>
+        <h1 className="text-2xl font-bold text-on-surface">طلبات الشراء</h1>
         <p className="text-sm text-on-surface-variant mt-1">
-          الطلاب الذين اختاروا الدفع عبر التحويل البنكي ويحتاجون موافقتك لتفعيل الدورة
+          طلاب ينتظرون اتصالك لإتمام الدفع وتفعيل الدورة
         </p>
       </div>
 
@@ -55,21 +55,30 @@ export default function PendingOrders() {
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="font-bold text-on-surface">{order.user.name}</span>
-                  <span className="text-xs text-outline">{order.user.email}</span>
+                  {order.user.phoneNumber && (
+                    <a
+                      href={`tel:${order.user.phoneNumber}`}
+                      dir="ltr"
+                      className="text-xs text-primary hover:underline flex items-center gap-1"
+                    >
+                      <span className="material-symbols-outlined text-sm">call</span>
+                      {order.user.phoneNumber}
+                    </a>
+                  )}
                 </div>
                 <p className="text-sm text-on-surface-variant">
                   طلب الوصول إلى: <span className="font-bold text-primary">{order.course.title}</span>
                 </p>
                 <div className="flex items-center gap-3 mt-2 text-xs text-outline">
-                  <span>{Number(order.amount)} د.ت</span>
-                  {order.user.phoneNumber && (
-                    <>
-                      <span className="w-1 h-1 bg-outline rounded-full" />
-                      <span dir="ltr">{order.user.phoneNumber}</span>
-                    </>
-                  )}
+                  <span className="font-bold text-on-surface">{Number(order.amount)} د.ت</span>
                   <span className="w-1 h-1 bg-outline rounded-full" />
                   <span>{new Date(order.createdAt).toLocaleDateString('ar-EG-u-nu-latn')}</span>
+                  {order.transferReference && (
+                    <>
+                      <span className="w-1 h-1 bg-outline rounded-full" />
+                      <span>ملاحظة: {order.transferReference}</span>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -79,13 +88,13 @@ export default function PendingOrders() {
                   className="px-4 py-2 bg-primary text-on-primary rounded-lg text-sm font-bold hover:opacity-90 transition-opacity flex items-center gap-1.5"
                 >
                   <span className="material-symbols-outlined text-base">check_circle</span>
-                  موافقة
+                  تم الدفع، تفعيل الدورة
                 </button>
                 <button
                   onClick={() => handleReject(order)}
                   className="px-4 py-2 bg-error/10 text-error rounded-lg text-sm font-bold hover:bg-error/20 transition-colors"
                 >
-                  رفض
+                  إلغاء
                 </button>
               </div>
             </div>

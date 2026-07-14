@@ -16,18 +16,19 @@ import AdminLayout from '../layouts/AdminLayout';
 
 import StudentDashboard from '../pages/dashboard/student/StudentDashboard';
 import StudentSettings from '../pages/dashboard/student/Settings';
-import CoursePlayerPage from '../pages/dashboard/student/CoursePlayerPage';
 import MyCourses from '../pages/dashboard/student/MyCourses';
-import EditCoursePage from '../pages/dashboard/admin/EditCoursePage';
+import StructuredCoursePlayer from '../pages/dashboard/student/StructuredCoursePlayer'; 
 
-// Admin Pages (Placeholders for later)
+// Admin Pages 
 import AdminHome from '../pages/dashboard/admin/adminHome';
 import CreateCoursePage from '../pages/dashboard/admin/CreateCoursePage';
 import CourseManagerPage from '../pages/dashboard/admin/CourseManagerPage';
+import EditCoursePage from '../pages/dashboard/admin/EditCoursePage';
 import UserManagerPage from '../pages/dashboard/admin/UserManagerPage';
 import AdminSettings from '../pages/dashboard/admin/Settings';
 import LiveManager from '../pages/dashboard/admin/LiveManager';
 import PendingOrders from '../pages/dashboard/admin/PendingOrders';
+import CourseStructureEditor from '../pages/dashboard/admin/CourseStructureEditor';
 
 
 export default function AppRoutes() {
@@ -55,7 +56,8 @@ export default function AppRoutes() {
         
         {/* Loads at /dashboard/student/courses */}
         <Route path="courses" element={<MyCourses />} />
-        <Route path="courses/:courseId" element={<CoursePlayerPage />} />
+        {/* Text/Article Structured Player */}
+        <Route path="courses/:courseId/structure" element={<StructuredCoursePlayer />} />
         
         {/* Loads at /dashboard/student/settings */}
         <Route path="settings" element={<StudentSettings />} />
@@ -77,6 +79,7 @@ export default function AppRoutes() {
         <Route path='courses/add' element={<CreateCoursePage />} />
         <Route path="courses" element={<CourseManagerPage />} />
         <Route path="courses/:id/edit" element={<EditCoursePage />} />
+        <Route path="courses/:courseId/structure" element={<CourseStructureEditor />} />
         <Route path="users" element={<UserManagerPage />} />
         <Route path="settings" element={<AdminSettings />} />
         <Route path="orders/pending" element={<PendingOrders />} />

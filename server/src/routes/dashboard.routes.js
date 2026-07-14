@@ -4,6 +4,7 @@ import { verifyAuth, requireRole } from '../middleware/auth.middleware.js';
 
 const router = Router();
 
+router.get('/stats', verifyAuth, requireRole('ADMIN'), dashboardController.getDashboardStats);
 router.get('/recent-activity', verifyAuth, requireRole('ADMIN'), dashboardController.getRecentActivity);
 
 export default router;

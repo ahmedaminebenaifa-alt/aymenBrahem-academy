@@ -6,16 +6,14 @@ import { useCreateCourse } from '../../../hooks/useCreateCourse';
 
 const CreateCoursePage = () => {
   const navigate = useNavigate();
-  
-  // 1. استدعاء هوك الـ API المعزول
   const { createCourse, isLoading, error, progress } = useCreateCourse();
 
-  // 2. الحالات المحلية النظيفة (Local States)
   const [courseData, setCourseData] = useState({
     title: '',
     price: '',
     description: '',
     category: '',
+    contentType: 'PDF_ONLY',
   });
 
   const [mediaFiles, setMediaFiles] = useState({
@@ -23,11 +21,10 @@ const CreateCoursePage = () => {
     pdfs: [],
   });
 
-  // 3. دوال التحديث النظيفة التي لا تؤثر على التوجيه (Pure Handlers)
   const handleCourseDataChange = (field, value) => {
     setCourseData((prev) => ({ 
       ...prev, 
-      [field]: value // يقوم بتحديث النص محلياً فقط دون إعادة تحميل أي أغلفة حماية
+      [field]: value 
     }));
   };
 
@@ -35,7 +32,6 @@ const CreateCoursePage = () => {
     setMediaFiles((prev) => ({ ...prev, [field]: value }));
   };
 
-  // 4. دالة معالجة الإرسال عند الضغط على زر النشر فقط
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -45,9 +41,15 @@ const CreateCoursePage = () => {
     }
 
     try {
-      await createCourse(courseData, mediaFiles);
+      const result = await createCourse(courseData, mediaFiles);
+      const newCourseId = result?.id || result?.courseId;
+
       setTimeout(() => {
-        navigate('/dashboard/admin/courses'); // التوجيه للمسار الصحيح بعد النجاح
+        if (courseData.contentType === 'STRUCTURED' && newCourseId) {
+          navigate(`/dashboard/admin/courses/${newCourseId}/structure`);
+        } else {
+          navigate('/dashboard/admin/courses');
+        }
       }, 1500);
     } catch (err) {
       console.error('فشلت عملية إنشاء الدرس:', err);
@@ -57,8 +59,6 @@ const CreateCoursePage = () => {
   return (
     <div className="relative min-h-screen rtl font-sans bg-surface text-on-surface">
       <div className="max-w-[1000px] mx-auto py-12 px-8 relative z-10">
-        
-        {/* رأس الصفحة */}
         <div className="flex justify-between items-end mb-12 border-b border-outline-variant/20 pb-8">
           <div>
             <h2 className="font-display font-bold text-3xl text-primary mb-2">
@@ -70,7 +70,7 @@ const CreateCoursePage = () => {
           </div>
           
           <button 
-            type="button" // مهم جداً لمنع أي إرسال بالخطأ
+            type="button" 
             disabled={isLoading}
             onClick={() => navigate('/dashboard/admin/courses')}
             className="px-6 py-2 border border-outline-variant/60 text-on-surface-variant bg-surface-container-lowest rounded-[4px] font-bold text-sm shadow-sm hover:bg-surface-container transition-colors disabled:opacity-50"
@@ -79,7 +79,6 @@ const CreateCoursePage = () => {
           </button>
         </div>
 
-        {/* عرض الأخطاء إن وجدت */}
         {error && (
           <div className="mb-8 p-4 bg-red-50 border border-red-200 text-red-700 rounded-[4px] font-bold text-sm flex items-center gap-2">
             <span className="material-symbols-outlined text-lg">error</span>
@@ -87,16 +86,11 @@ const CreateCoursePage = () => {
           </div>
         )}
 
-        {/* النموذج الرئيسي */}
         <form onSubmit={handleSubmit} className="space-y-10">
-          
-          {/* المكونات الفرعية تستقبل البيانات والدوال بشكل نظيف */}
           <CourseBasicInfo data={courseData} onChange={handleCourseDataChange} />
           <CourseMedia media={mediaFiles} onChange={handleMediaChange} />
 
-          {/* شريط التحميل وأزرار التحكم السفلى */}
           <div className="pt-12 pb-20 border-t border-outline-variant/20 mt-12">
-            
             {isLoading && (
               <div className="mb-6">
                 <div className="flex justify-between text-xs font-bold text-primary mb-2">

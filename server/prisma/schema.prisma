@@ -51,6 +51,7 @@ model Course {
   enrollments  Enrollment[]
   liveSessions LiveSession[]
   orders          Order[]
+  subCourses  SubCourse[]
 }
 
 enum CourseCategory {
@@ -179,7 +180,49 @@ model Order {
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
   paidAt            DateTime?
+  transferReference String?
 
   @@index([status])
   @@index([userId])
+}
+
+
+model SubCourse {
+  id        String   @id @default(uuid())
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title     String
+  order     Int      @default(0)
+  published Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  themes    Theme[]
+
+  @@index([courseId])
+}
+
+model Theme {
+  id          String    @id @default(uuid())
+  subCourseId String
+  subCourse   SubCourse @relation(fields: [subCourseId], references: [id], onDelete: Cascade)
+  title       String
+  order       Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  contents    ContentBlock[]
+
+  @@index([subCourseId])
+}
+
+model ContentBlock {
+  id        String   @id @default(uuid())
+  themeId   String
+  theme     Theme    @relation(fields: [themeId], references: [id], onDelete: Cascade)
+  title     String
+  body      String   @db.Text
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([themeId])
 }

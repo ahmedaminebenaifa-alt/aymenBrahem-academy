@@ -7,6 +7,7 @@ import notificationRoutes from './notification.routes.js';
 import liveRoutes from './live.routes.js';
 import dashboardRoutes from './dashboard.routes.js';
 import orderRoutes from './order.routes.js';
+import courseStructureRoutes from './courseStructure.routes.js';
 
 const router = Router();
 
@@ -18,5 +19,6 @@ router.use('/notifications', notificationRoutes);
 router.use('/live', liveRoutes);
 router.use('/dashboard', dashboardRoutes);
 router.use('/orders', orderRoutes);
+router.use('/', courseStructureRoutes)
 
 export default router;

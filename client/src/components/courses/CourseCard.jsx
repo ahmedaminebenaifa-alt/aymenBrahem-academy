@@ -16,6 +16,7 @@ const CourseCard = ({ course, onEnroll, isEnrolling }) => {
     title,
     description,
     category,
+    contentType,
     coverImage,
     isFree,
     price,
@@ -30,8 +31,13 @@ const CourseCard = ({ course, onEnroll, isEnrolling }) => {
     ? (coverImage.startsWith('http') ? coverImage : `${API_BASE_URL}${coverImage}`)
     : null;
 
+  
+  const targetUrl = `/dashboard/student/courses/${id}/structure`; 
+  
+
   const handleCardClick = () => {
-    navigate(`/dashboard/student/courses/${id}`);
+    // Passes the name safely via state history context
+    navigate(targetUrl, { state: { courseTitle: title } });
   };
 
   const handleActionClick = (e) => {
@@ -111,7 +117,7 @@ const CourseCard = ({ course, onEnroll, isEnrolling }) => {
             
             {resourcesCount > 0 && (
               <>
-                <div className="w1 h-1 rounded-full bg-[var(--outline-variant)]"></div>
+                <div className="w-1 h-1 rounded-full bg-[var(--outline-variant)]"></div>
                 <div className="flex items-center gap-1.5">
                   <span className="material-symbols-outlined text-[18px] text-[#d4af37]">menu_book</span>
                   <span>{resourcesCount} مصادر</span>
@@ -133,7 +139,8 @@ const CourseCard = ({ course, onEnroll, isEnrolling }) => {
             <div className="w-full">
               {isEnrolled ? (
                 <Link
-                  to={`/dashboard/student/courses/${id}`}
+                  to={targetUrl}
+                  state={{ courseTitle: title }}
                   className="w-full py-2.5 bg-[#063c25]/5 text-[#063c25] rounded text-sm font-bold flex justify-center items-center gap-2 hover:bg-[#063c25] hover:text-white transition-colors duration-200"
                 >
                   <span className="material-symbols-outlined text-[20px]">import_contacts</span>
@@ -174,7 +181,7 @@ const CourseCard = ({ course, onEnroll, isEnrolling }) => {
           <PurchaseModal
             course={course}
             onClose={() => setShowPurchaseModal(false)}
-            onManualSuccess={() => setJustSubmittedManual(true)}
+            onSuccess={() => setJustSubmittedManual(true)}
           />
         )}
       </article>

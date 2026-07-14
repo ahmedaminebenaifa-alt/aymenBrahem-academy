@@ -9,24 +9,22 @@ import CourseTable from '../../../components/dashboard/admin/courses/CourseTable
 
 const CourseManagerPage = () => {
   const navigate = useNavigate();
-  
+
   // استدعاء البيانات والتحكم والفلترة الكاملة من الهوك الرئيسي
-  const { 
-    courses, 
-    isLoading, 
-    error, 
-    stats, 
-    activeFilter, 
-    setActiveFilter, 
-    deleteCourse 
+  const {
+    courses,
+    isLoading,
+    error,
+    stats,
+    activeFilter,
+    setActiveFilter,
+    deleteCourse,
+    togglePublish,
+    togglingId,
   } = useCourses();
 
   const handleAddCourseClick = () => {
     navigate('/dashboard/admin/courses/create');
-  };
-
-  const handleTogglePublish = (id, currentStatus) => {
-    console.log('تبديل حالة النشر للمعرف الكورسي المتغير:', id, 'الحالة الحالية:', currentStatus);
   };
 
   return (
@@ -65,7 +63,8 @@ const CourseManagerPage = () => {
           isLoading={isLoading} 
           error={error} 
           onDelete={deleteCourse}
-          onTogglePublish={handleTogglePublish}
+          onTogglePublish={togglePublish}
+          togglingId={togglingId}
           onAddClick={handleAddCourseClick}
         />
 

@@ -6,6 +6,7 @@ export const useCourses = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeFilter, setActiveFilter] = useState('الكل');
+  const [togglingId, setTogglingId] = useState(null);
 
   const fetchCourses = useCallback(async () => {
     setIsLoading(true);
@@ -47,6 +48,20 @@ export const useCourses = () => {
     }
   };
 
+  const togglePublish = async (courseId, currentStatus) => {
+    setTogglingId(courseId);
+    try {
+      await api.patch(`/courses/${courseId}`, { published: !currentStatus });
+      setCourses((prev) =>
+        prev.map((c) => (c.id === courseId ? { ...c, published: !currentStatus } : c))
+      );
+    } catch (err) {
+      alert(err.response?.data?.error || 'فشل تغيير حالة النشر');
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
   return {
     courses: filteredCourses,
     isLoading,
@@ -55,5 +70,7 @@ export const useCourses = () => {
     activeFilter,
     setActiveFilter,
     deleteCourse,
+    togglePublish,
+    togglingId,
   };
 };

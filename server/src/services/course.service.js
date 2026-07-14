@@ -24,15 +24,11 @@ export const listPublishedCourses = () => {
 export const getCourseById = async (id) => {
   const course = await prisma.course.findUnique({
     where: { id },
-    include: { files: true }, 
+    include: { files: true, subCourses: true },
   });
-  
-  if (!course) {
-    throw new ApiError(404, 'Course not found');
-  }
+  if (!course) throw new ApiError(404, 'Course not found');
   return course;
 };
-
 /**
  * Create a new course
  */
@@ -44,12 +40,14 @@ export const createCourse = (data) => {
  * Update an existing course
  */
 export const updateCourse = async (id, data) => {
-  const existing = await getCourseById(id); // Throws 404 if missing
+  const existing = await getCourseById(id); 
 
-  // Merge existing data with new data to validate business logic
   const merged = { ...existing, ...data };
   if (!merged.isFree && merged.price == null) {
     throw new ApiError(400, 'Price is required for paid courses');
+  }
+  if (data.isFree === true) {
+    data.price = null;
   }
 
   return prisma.course.update({ where: { id }, data });
@@ -96,7 +94,7 @@ export const getStudentCourses = async (userId) => {
       category: course.category,
       isFree: course.isFree,
       price: course.price,
-      coverImage: course.coverImage,
+      coverImage: course.coverImage, 
       isEnrolled,
       resourcesCount: pdfCount
     };

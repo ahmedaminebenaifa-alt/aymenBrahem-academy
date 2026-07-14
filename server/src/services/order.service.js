@@ -1,13 +1,7 @@
 import prisma from '../config/db.js';
 import { ApiError } from '../utils/ApiError.js';
 
-const OFFLINE_METHODS = ['MANUAL', 'BANK_TRANSFER', 'POSTAL_TRANSFER'];
-
-export const createOrder = async ({ userId, courseId, method, transferReference }) => {
-  if (!OFFLINE_METHODS.includes(method)) {
-    throw new ApiError(400, 'طريقة الدفع غير متاحة');
-  }
-
+export const createOrder = async ({ userId, courseId, note }) => {
   const [course, existingEnrollment, existingPendingOrder] = await Promise.all([
     prisma.course.findUnique({ where: { id: courseId } }),
     prisma.enrollment.findUnique({ where: { userId_courseId: { userId, courseId } } }),
@@ -19,42 +13,47 @@ export const createOrder = async ({ userId, courseId, method, transferReference 
   if (existingEnrollment) throw new ApiError(409, 'أنت مسجل بالفعل في هذه الدورة');
   if (existingPendingOrder) throw new ApiError(409, 'لديك طلب شراء قيد الانتظار لهذه الدورة بالفعل');
 
-  if (method !== 'MANUAL' && !transferReference) {
-    throw new ApiError(400, 'يرجى إدخال رقم مرجع التحويل');
-  }
-
   const order = await prisma.order.create({
     data: {
       userId,
       courseId,
       amount: course.price,
-      method,
+      method: 'MANUAL',
       status: 'PENDING',
-      transferReference: transferReference || null,
+      transferReference: note || null,
     },
   });
 
   return { order };
 };
 
-export const approveManualOrder = async (orderId, adminId) => {
+export const approveOrder = async (orderId, adminId) => {
   const order = await prisma.order.findUnique({ where: { id: orderId } });
-  if (!order || !OFFLINE_METHODS.includes(order.method)) {
-    throw new ApiError(404, 'طلب الشراء غير موجود');
-  }
-  if (order.status !== 'PENDING') {
-    throw new ApiError(409, 'تمت معالجة هذا الطلب مسبقاً');
-  }
+  if (!order) throw new ApiError(404, 'طلب الشراء غير موجود');
+  if (order.status !== 'PENDING') throw new ApiError(409, 'تمت معالجة هذا الطلب مسبقاً');
 
   await prisma.order.update({
     where: { id: orderId },
     data: { approvedById: adminId },
   });
 
-  return completeOrder(orderId);
+  return prisma.$transaction(async (tx) => {
+    const updatedOrder = await tx.order.update({
+      where: { id: orderId },
+      data: { status: 'PAID', paidAt: new Date() },
+    });
+
+    await tx.enrollment.upsert({
+      where: { userId_courseId: { userId: order.userId, courseId: order.courseId } },
+      update: {},
+      create: { userId: order.userId, courseId: order.courseId },
+    });
+
+    return updatedOrder;
+  });
 };
 
-export const rejectManualOrder = async (orderId, adminId) => {
+export const rejectOrder = async (orderId, adminId) => {
   const order = await prisma.order.findUnique({ where: { id: orderId } });
   if (!order || order.status !== 'PENDING') {
     throw new ApiError(404, 'طلب الشراء غير موجود أو تمت معالجته');
@@ -66,23 +65,6 @@ export const rejectManualOrder = async (orderId, adminId) => {
   });
 };
 
-const completeOrder = async (orderId) => {
-  return prisma.$transaction(async (tx) => {
-    const order = await tx.order.update({
-      where: { id: orderId },
-      data: { status: 'PAID', paidAt: new Date() },
-    });
-
-    await tx.enrollment.upsert({
-      where: { userId_courseId: { userId: order.userId, courseId: order.courseId } },
-      update: {},
-      create: { userId: order.userId, courseId: order.courseId },
-    });
-
-    return order;
-  });
-};
-
 export const getMyOrders = (userId) => {
   return prisma.order.findMany({
     where: { userId },
@@ -91,9 +73,9 @@ export const getMyOrders = (userId) => {
   });
 };
 
-export const getPendingManualOrders = () => {
+export const getPendingOrders = () => {
   return prisma.order.findMany({
-    where: { method: { in: OFFLINE_METHODS }, status: 'PENDING' },
+    where: { status: 'PENDING' },
     include: {
       user: { select: { name: true, email: true, phoneNumber: true } },
       course: { select: { title: true, price: true } },

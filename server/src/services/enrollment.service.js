@@ -40,6 +40,7 @@ export const getMyEnrollments = (userId) => {
           title: true,
           coverImage: true,
           category: true,
+          contentType: true,
           isFree: true,
           price: true,
           description: true,

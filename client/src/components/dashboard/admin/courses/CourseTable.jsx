@@ -2,7 +2,7 @@ import React from 'react';
 import CourseEmptyState from './CourseEmptyState';
 import { useNavigate } from 'react-router-dom';
 
-const CourseTable = ({ courses, isLoading, error, onDelete, onTogglePublish, onAddClick }) => {
+const CourseTable = ({ courses, isLoading, error, onDelete, onTogglePublish, togglingId, onAddClick }) => {
 
   const navigate = useNavigate();
   // إذا لم تكن البيانات في حالة تحميل أو خطأ، والمصفوفة فارغة، نعرض شاشة الفراغ المخصصة
@@ -42,59 +42,66 @@ const CourseTable = ({ courses, isLoading, error, onDelete, onTogglePublish, onA
               </tr>
             )}
 
-            {!isLoading && !error && courses.map((course) => (
-              <tr key={course.id} className="hover:bg-surface-container-low/30 transition-colors group">
-                <td className="py-4 px-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-primary/5 border border-outline-variant/20 rounded-[4px] flex items-center justify-center">
-                      <span className="material-symbols-outlined text-primary text-xl">auto_stories</span>
+            {!isLoading && !error && courses.map((course) => {
+              const isToggling = togglingId === course.id;
+              return (
+                <tr key={course.id} className="hover:bg-surface-container-low/30 transition-colors group">
+                  <td className="py-4 px-6">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-primary/5 border border-outline-variant/20 rounded-[4px] flex items-center justify-center">
+                        <span className="material-symbols-outlined text-primary text-xl">auto_stories</span>
+                      </div>
+                      <div>
+                        <p className="font-display font-bold text-sm text-on-surface group-hover:text-primary transition-colors">
+                          {course.title}
+                        </p>
+                        <p className="text-xs text-on-surface-variant/60 max-w-xs truncate">
+                          {course.description || 'لا يوجد وصف مضاف لهذه المادة.'}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-display font-bold text-sm text-on-surface group-hover:text-primary transition-colors">
-                        {course.title}
-                      </p>
-                      <p className="text-xs text-on-surface-variant/60 max-w-xs truncate">
-                        {course.description || 'لا يوجد وصف مضاف لهذه المادة.'}
-                      </p>
-                    </div>
-                  </div>
-                </td>
-                <td className="py-4 px-6">
-                  <span className="px-2.5 py-1 bg-primary/5 text-primary rounded-[4px] text-xs font-bold">
-                    {course.category || 'عام'}
-                  </span>
-                </td>
-                <td className="py-4 px-6 font-mono font-bold text-xs text-on-surface-variant">
-                  {course.isFree ? 'مجاني' : `${Number(course.price).toLocaleString('ar-EG')} ج.م`}
-                </td>
-                <td className="py-4 px-6 text-center">
-                  <button
-                    onClick={() => onTogglePublish(course.id, course.published)}
-                    className={`px-4 py-1.5 rounded-[4px] font-bold text-xs transition-all border ${
-                      course.published 
-                        ? 'bg-primary text-on-primary border-primary hover:opacity-95' 
-                        : 'bg-surface-container-low text-on-surface-variant border-outline-variant/40 hover:bg-surface-container-high'
-                    }`}
-                  >
-                    {course.published ? 'منشور للطلاب' : 'مسودة غامضة'}
-                  </button>
-                </td>
-                <td className="py-4 px-6 text-left">
-                  <div className="flex items-center justify-end gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
+                  </td>
+                  <td className="py-4 px-6">
+                    <span className="px-2.5 py-1 bg-primary/5 text-primary rounded-[4px] text-xs font-bold">
+                      {course.category || 'عام'}
+                    </span>
+                  </td>
+                  <td className="py-4 px-6 font-mono font-bold text-xs text-on-surface-variant">
+                    {course.isFree ? 'مجاني' : `${Number(course.price).toLocaleString('ar-EG')} د.ت`}
+                  </td>
+                  <td className="py-4 px-6 text-center">
                     <button
-                      onClick={() => navigate(`/dashboard/admin/courses/${course.id}/edit`)}
-                      className="p-1.5 text-on-surface-variant hover:text-primary hover:bg-primary/5 rounded-[4px]"
-                      title="تعديل"
+                      onClick={() => onTogglePublish(course.id, course.published)}
+                      disabled={isToggling}
+                      className={`px-4 py-1.5 rounded-[4px] font-bold text-xs transition-all border inline-flex items-center gap-1.5 disabled:opacity-60 disabled:cursor-not-allowed ${
+                        course.published 
+                          ? 'bg-primary text-on-primary border-primary hover:opacity-95' 
+                          : 'bg-surface-container-low text-on-surface-variant border-outline-variant/40 hover:bg-surface-container-high'
+                      }`}
                     >
-                      <span className="material-symbols-outlined text-[18px]">edit</span>
+                      {isToggling && (
+                        <span className="material-symbols-outlined text-[14px] animate-spin">progress_activity</span>
+                      )}
+                      {course.published ? 'منشور للطلاب' : 'مسودة غامضة'}
                     </button>
-                    <button onClick={() => onDelete(course.id)} className="p-1.5 text-on-surface-variant hover:text-error hover:bg-error/5 rounded-[4px]" title="حذف">
-                      <span className="material-symbols-outlined text-[18px]">delete</span>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
+                  </td>
+                  <td className="py-4 px-6 text-left">
+                    <div className="flex items-center justify-end gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => navigate(`/dashboard/admin/courses/${course.id}/edit`)}
+                        className="p-1.5 text-on-surface-variant hover:text-primary hover:bg-primary/5 rounded-[4px]"
+                        title="تعديل"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">edit</span>
+                      </button>
+                      <button onClick={() => onDelete(course.id)} className="p-1.5 text-on-surface-variant hover:text-error hover:bg-error/5 rounded-[4px]" title="حذف">
+                        <span className="material-symbols-outlined text-[18px]">delete</span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

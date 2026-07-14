@@ -19,6 +19,8 @@ export const useEditCourse = (courseId) => {
         category: course.category || '',
         price: course.price ? String(course.price) : '',
         coverImage: course.coverImage || null,
+        contentType: course.contentType || 'PDF_ONLY',
+        subCourses: course.subCourses || [],
       });
       setExistingFiles(course.files || []);
     } catch (err) {
@@ -44,16 +46,16 @@ export const useEditCourse = (courseId) => {
     }
   };
 
-  const updateCourse = async (updatedData, newThumbnail) => {
+  const updateCourse = async (updatedData, newThumbnail, newPdfs = []) => {
     setIsSaving(true);
     setError(null);
-    setProgress({ step: 'جاري التحضير...', percentage: 20 });
+    setProgress({ step: 'جاري التحضير...', percentage: 10 });
 
     try {
       let coverImageUrl;
 
       if (newThumbnail) {
-        setProgress({ step: 'جاري رفع صورة الغلاف الجديدة...', percentage: 40 });
+        setProgress({ step: 'جاري رفع صورة الغلاف الجديدة...', percentage: 25 });
         const imageFormData = new FormData();
         imageFormData.append('image', newThumbnail);
 
@@ -63,19 +65,39 @@ export const useEditCourse = (courseId) => {
         coverImageUrl = imageData.imageUrl;
       }
 
-      setProgress({ step: 'جاري حفظ التعديلات...', percentage: 70 });
+      setProgress({ step: 'جاري حفظ التعديلات...', percentage: 45 });
       const isFree = !updatedData.price || parseFloat(updatedData.price) === 0;
 
       const payload = {
         title: updatedData.title.trim(),
         description: updatedData.description.trim(),
         category: updatedData.category,
+        contentType: updatedData.contentType,
         price: isFree ? null : parseFloat(updatedData.price),
         isFree,
         ...(coverImageUrl && { coverImage: coverImageUrl }),
       };
 
       const { data: updated } = await api.patch(`/courses/${courseId}`, payload);
+
+      if (newPdfs.length > 0) {
+        setProgress({ step: 'جاري رفع الملفات الجديدة...', percentage: 60 });
+        const total = newPdfs.length;
+        for (let i = 0; i < total; i++) {
+          const file = newPdfs[i];
+          const pdfFormData = new FormData();
+          pdfFormData.append('file', file);
+          pdfFormData.append('order', existingFiles.length + i + 1);
+
+          await api.post(`/courses/${courseId}/files`, pdfFormData, {
+            headers: { 'Content-Type': undefined },
+          });
+
+          const currentProgress = 60 + Math.floor(((i + 1) / total) * 40);
+          setProgress({ step: `تم رفع ${i + 1} من ${total} ملفات...`, percentage: currentProgress });
+        }
+      }
+
       setProgress({ step: 'تم الحفظ بنجاح!', percentage: 100 });
       return updated;
     } catch (err) {

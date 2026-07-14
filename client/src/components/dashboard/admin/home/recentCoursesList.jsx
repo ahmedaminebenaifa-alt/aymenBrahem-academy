@@ -112,7 +112,7 @@ const RecentCoursesList = () => {
                     </span>
                   ) : (
                     <span className="px-2.5 py-1 bg-surface-container-high rounded-[4px] text-xs font-mono font-bold text-on-surface-variant">
-                      {Number(course.price).toLocaleString('ar-EG')} ج.م
+                      {Number(course.price).toLocaleString('ar-EG')} د.ت
                     </span>
                   )}
                 </td>
