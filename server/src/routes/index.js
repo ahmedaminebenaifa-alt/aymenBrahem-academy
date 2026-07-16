@@ -8,6 +8,7 @@ import liveRoutes from './live.routes.js';
 import dashboardRoutes from './dashboard.routes.js';
 import orderRoutes from './order.routes.js';
 import courseStructureRoutes from './courseStructure.routes.js';
+import progressRoutes from './progress.routes.js';
 
 const router = Router();
 
@@ -19,6 +20,8 @@ router.use('/notifications', notificationRoutes);
 router.use('/live', liveRoutes);
 router.use('/dashboard', dashboardRoutes);
 router.use('/orders', orderRoutes);
-router.use('/', courseStructureRoutes)
+router.use('/', courseStructureRoutes);
+router.use('/', progressRoutes);
+
 
 export default router;

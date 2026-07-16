@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { useCourseStructure } from '../../../hooks/useCourseStructure';
+import ContentToolbar from '../../../components/courses/structuredPlayer/ContentToolbar.jsx';
+
 
 function useSereneScholarshipFonts() {
   useEffect(() => {
@@ -27,22 +29,26 @@ const CourseStructureEditor = () => {
     addSubCourse,
     editSubCourse,
     removeSubCourse,
-    moveSubCourse,
+    reorderSubCourses,
     addTheme,
     editTheme,
     removeTheme,
-    moveTheme,
+    reorderThemes,
     addContentBlock,
     editContentBlock,
     removeContentBlock,
-    moveContentBlock,
+    reorderContentBlocks,
   } = useCourseStructure(courseId, 'admin');
 
+  const textareaRef = useRef(null);
   const [expanded, setExpanded] = useState(new Set());
   const [selected, setSelected] = useState(null); // { type, node, parentId }
   const [form, setForm] = useState({ title: '', body: '' });
   const [saving, setSaving] = useState(false);
-  const [busyAction, setBusyAction] = useState(null); // e.g. "move-<id>-up"
+
+  // Drag state: which item is being dragged, and what kind (so we don't drop a theme onto a subcourse list)
+  const [dragItem, setDragItem] = useState(null); // { type, id, parentId }
+  const [dragOverId, setDragOverId] = useState(null);
 
   useEffect(() => {
     if (selected) {
@@ -78,17 +84,6 @@ const CourseStructureEditor = () => {
     if (selected?.node.id === id) setSelected(null);
   };
 
-  const handleMove = async (type, id, direction) => {
-    setBusyAction(`move-${id}-${direction}`);
-    try {
-      if (type === 'subcourse') await moveSubCourse(id, direction);
-      if (type === 'theme') await moveTheme(id, direction);
-      if (type === 'content') await moveContentBlock(id, direction);
-    } finally {
-      setBusyAction(null);
-    }
-  };
-
   const handleSave = async () => {
     if (!selected) return;
     setSaving(true);
@@ -116,6 +111,51 @@ const CourseStructureEditor = () => {
     }
   };
 
+  // ── Drag-and-drop handlers ──
+  const handleDragStart = (type, id, parentId) => (e) => {
+    setDragItem({ type, id, parentId });
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (type, id, parentId) => (e) => {
+    e.preventDefault();
+    // Only allow dropping within the same type and same parent list
+    if (!dragItem || dragItem.type !== type || dragItem.parentId !== parentId) return;
+    if (dragOverId !== id) setDragOverId(id);
+  };
+
+  const handleDragEnd = () => {
+    setDragItem(null);
+    setDragOverId(null);
+  };
+
+  const handleDrop = (type, siblings, parentId) => async (e) => {
+    e.preventDefault();
+    if (!dragItem || dragItem.type !== type || dragItem.parentId !== parentId || !dragOverId) {
+      setDragItem(null);
+      setDragOverId(null);
+      return;
+    }
+    if (dragItem.id === dragOverId) {
+      setDragItem(null);
+      setDragOverId(null);
+      return;
+    }
+
+    const ids = siblings.map((s) => s.id);
+    const fromIdx = ids.indexOf(dragItem.id);
+    const toIdx = ids.indexOf(dragOverId);
+    ids.splice(fromIdx, 1);
+    ids.splice(toIdx, 0, dragItem.id);
+
+    setDragItem(null);
+    setDragOverId(null);
+
+    if (type === 'subcourse') await reorderSubCourses(ids);
+    if (type === 'theme') await reorderThemes(parentId, ids);
+    if (type === 'content') await reorderContentBlocks(parentId, ids);
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-[60vh] font-[Be_Vietnam_Pro] text-[#414844]">
@@ -132,27 +172,11 @@ const CourseStructureEditor = () => {
     );
   }
 
-  const MoveButtons = ({ type, id, siblings }) => {
-    const idx = siblings.findIndex((s) => s.id === id);
-    return (
-      <span className="flex flex-col -my-1">
-        <button
-          onClick={(e) => { e.stopPropagation(); handleMove(type, id, 'up'); }}
-          disabled={idx === 0 || busyAction === `move-${id}-up`}
-          className="text-[#717973] hover:text-[#012d1d] disabled:opacity-20 disabled:pointer-events-none"
-        >
-          <span className="material-symbols-outlined text-[16px]">keyboard_arrow_up</span>
-        </button>
-        <button
-          onClick={(e) => { e.stopPropagation(); handleMove(type, id, 'down'); }}
-          disabled={idx === siblings.length - 1 || busyAction === `move-${id}-down`}
-          className="text-[#717973] hover:text-[#012d1d] disabled:opacity-20 disabled:pointer-events-none"
-        >
-          <span className="material-symbols-outlined text-[16px]">keyboard_arrow_down</span>
-        </button>
-      </span>
-    );
-  };
+  const DragHandle = () => (
+    <span className="material-symbols-outlined text-[16px] text-[#c1c8c2] cursor-grab active:cursor-grabbing shrink-0">
+      drag_indicator
+    </span>
+  );
 
   return (
     <div dir="rtl" className="flex h-[calc(100vh-80px)] bg-[#fcf9f8] overflow-hidden">
@@ -201,14 +225,20 @@ const CourseStructureEditor = () => {
             {selected.type === 'content' && (
               <>
                 <label className="block font-[Inter] text-xs font-semibold text-[#717973] mb-2">
-                  المحتوى (استخدم # للعنوان الرئيسي و ## للعنوان الفرعي)
+                  المحتوى
                 </label>
+                <ContentToolbar
+                  textareaRef={textareaRef}
+                  value={form.body}
+                  onChange={(newBody) => setForm((f) => ({ ...f, body: newBody }))}
+                />
                 <textarea
+                  ref={textareaRef}
                   rows={14}
                   value={form.body}
                   onChange={(e) => setForm((f) => ({ ...f, body: e.target.value }))}
-                  className="w-full font-[Be_Vietnam_Pro] text-base leading-[1.8] text-[#1b1c1c] border border-[#c1c8c2] focus:border-[#e9c176] rounded-lg p-4 outline-none resize-none mb-8"
-                  placeholder={'# عنوان رئيسي\nنص عادي هنا...\n## عنوان فرعي\nنص عادي آخر...'}
+                  className="w-full font-[Be_Vietnam_Pro] text-base leading-[1.8] text-[#1b1c1c] border border-[#c1c8c2] focus:border-[#e9c176] rounded-b-lg p-4 outline-none resize-none mb-8"
+                  placeholder={'# عنوان رئيسي\nنص عادي هنا...\n## عنوان فرعي\n**كلمة عريضة** و *كلمة مائلة*\n- عنصر قائمة\n- عنصر آخر'}
                 />
               </>
             )}
@@ -236,13 +266,20 @@ const CourseStructureEditor = () => {
           {subCourses.map((sc) => {
             const isExpanded = expanded.has(sc.id);
             const isSelected = selected?.node.id === sc.id;
+            const isDragOver = dragOverId === sc.id && dragItem?.type === 'subcourse';
             return (
               <div key={sc.id}>
                 <div
-                  className={`flex items-center gap-2 px-4 py-2.5 cursor-pointer transition-all ${
-                    isSelected ? 'bg-[#c1ecd4]/30' : 'hover:bg-white/50'
-                  }`}
+                  draggable
+                  onDragStart={handleDragStart('subcourse', sc.id, null)}
+                  onDragOver={handleDragOver('subcourse', sc.id, null)}
+                  onDrop={handleDrop('subcourse', subCourses, null)}
+                  onDragEnd={handleDragEnd}
+                  className={`flex items-center gap-2 px-4 py-2.5 cursor-pointer transition-all border-t-2 ${
+                    isDragOver ? 'border-t-[#e9c176]' : 'border-t-transparent'
+                  } ${isSelected ? 'bg-[#c1ecd4]/30' : 'hover:bg-white/50'}`}
                 >
+                  <DragHandle />
                   <button onClick={() => toggle(sc.id)} className="text-[#414844]">
                     <span className="material-symbols-outlined text-[18px]">
                       {isExpanded ? 'keyboard_arrow_down' : 'keyboard_arrow_left'}
@@ -259,7 +296,6 @@ const CourseStructureEditor = () => {
                   >
                     {sc.title}
                   </span>
-                  <MoveButtons type="subcourse" id={sc.id} siblings={subCourses} />
                   <button onClick={() => handleDelete('subcourse', sc.id)} className="text-[#717973] hover:text-[#ba1a1a]">
                     <span className="material-symbols-outlined text-[16px]">delete</span>
                   </button>
@@ -270,13 +306,20 @@ const CourseStructureEditor = () => {
                     {sc.themes.map((theme) => {
                       const themeExpanded = expanded.has(theme.id);
                       const themeSelected = selected?.node.id === theme.id;
+                      const isThemeDragOver = dragOverId === theme.id && dragItem?.type === 'theme';
                       return (
                         <div key={theme.id}>
                           <div
-                            className={`flex items-center gap-2 pr-8 pl-4 py-2 cursor-pointer transition-all ${
-                              themeSelected ? 'bg-[#c1ecd4]/30' : 'hover:bg-white/50'
-                            }`}
+                            draggable
+                            onDragStart={handleDragStart('theme', theme.id, sc.id)}
+                            onDragOver={handleDragOver('theme', theme.id, sc.id)}
+                            onDrop={handleDrop('theme', sc.themes, sc.id)}
+                            onDragEnd={handleDragEnd}
+                            className={`flex items-center gap-2 pr-6 pl-4 py-2 cursor-pointer transition-all border-t-2 ${
+                              isThemeDragOver ? 'border-t-[#e9c176]' : 'border-t-transparent'
+                            } ${themeSelected ? 'bg-[#c1ecd4]/30' : 'hover:bg-white/50'}`}
                           >
+                            <DragHandle />
                             <button onClick={() => toggle(theme.id)} className="text-[#414844]">
                               <span className="material-symbols-outlined text-[16px]">
                                 {themeExpanded ? 'keyboard_arrow_down' : 'keyboard_arrow_left'}
@@ -291,7 +334,6 @@ const CourseStructureEditor = () => {
                             >
                               {theme.title}
                             </span>
-                            <MoveButtons type="theme" id={theme.id} siblings={sc.themes} />
                             <button onClick={() => handleDelete('theme', theme.id)} className="text-[#717973] hover:text-[#ba1a1a]">
                               <span className="material-symbols-outlined text-[14px]">delete</span>
                             </button>
@@ -301,21 +343,27 @@ const CourseStructureEditor = () => {
                             <div>
                               {theme.contents.map((content) => {
                                 const contentSelected = selected?.node.id === content.id;
+                                const isContentDragOver = dragOverId === content.id && dragItem?.type === 'content';
                                 return (
                                   <div
                                     key={content.id}
+                                    draggable
+                                    onDragStart={handleDragStart('content', content.id, theme.id)}
+                                    onDragOver={handleDragOver('content', content.id, theme.id)}
+                                    onDrop={handleDrop('content', theme.contents, theme.id)}
+                                    onDragEnd={handleDragEnd}
                                     onClick={() => select('content', content, theme.id)}
-                                    className={`flex items-center gap-2 pr-14 pl-4 py-2 cursor-pointer transition-all ${
-                                      contentSelected ? 'bg-[#c1ecd4]/30' : 'hover:bg-white/50'
-                                    }`}
+                                    className={`flex items-center gap-2 pr-12 pl-4 py-2 cursor-pointer transition-all border-t-2 ${
+                                      isContentDragOver ? 'border-t-[#e9c176]' : 'border-t-transparent'
+                                    } ${contentSelected ? 'bg-[#c1ecd4]/30' : 'hover:bg-white/50'}`}
                                   >
+                                    <DragHandle />
                                     <span className="material-symbols-outlined text-[13px] text-[#717973]">
                                       {ICONS.content}
                                     </span>
                                     <span className="flex-1 font-[Inter] text-xs text-[#414844] truncate">
                                       {content.title}
                                     </span>
-                                    <MoveButtons type="content" id={content.id} siblings={theme.contents} />
                                     <button
                                       onClick={(e) => { e.stopPropagation(); handleDelete('content', content.id); }}
                                       className="text-[#717973] hover:text-[#ba1a1a]"
@@ -327,7 +375,7 @@ const CourseStructureEditor = () => {
                               })}
                               <button
                                 onClick={() => handleAdd('content', theme.id)}
-                                className="w-full text-right pr-14 pl-4 py-2 text-[#5d4201] hover:bg-white/50 font-[Inter] text-xs font-semibold flex items-center gap-2"
+                                className="w-full text-right pr-12 pl-4 py-2 text-[#5d4201] hover:bg-white/50 font-[Inter] text-xs font-semibold flex items-center gap-2"
                               >
                                 <span className="material-symbols-outlined text-[14px]">add</span>
                                 إضافة محتوى
@@ -339,7 +387,7 @@ const CourseStructureEditor = () => {
                     })}
                     <button
                       onClick={() => handleAdd('theme', sc.id)}
-                      className="w-full text-right pr-8 pl-4 py-2 text-[#5d4201] hover:bg-white/50 font-[Inter] text-xs font-semibold flex items-center gap-2"
+                      className="w-full text-right pr-6 pl-4 py-2 text-[#5d4201] hover:bg-white/50 font-[Inter] text-xs font-semibold flex items-center gap-2"
                     >
                       <span className="material-symbols-outlined text-[16px]">add</span>
                       إضافة موضوع

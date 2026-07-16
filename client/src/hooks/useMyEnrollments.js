@@ -13,12 +13,9 @@ export const useMyEnrollments = () => {
     setError(null);
     try {
       const { data } = await api.get('/enrollments/me', { signal });
-      const flattened = data.data.map((enrollment) => ({
-        ...enrollment.course,
-        enrolledAt: enrollment.enrolledAt,
-        resourcesCount: enrollment.course.files?.filter(f => f.url?.toLowerCase().endsWith('.pdf')).length || 0,
-      }));
-      setCourses(flattened);
+      // Backend already returns fully-flattened course objects with
+      // lessonsCount, completedLessons, resourcesCount, and enrolledAt included.
+      setCourses(data.data);
     } catch (err) {
       if (err.code === 'ERR_CANCELED') return;
       setError(err.response?.data?.error || 'فشل في جلب دوراتك المسجلة');

@@ -98,6 +98,21 @@ export const useCourseStructure = (courseId, mode = 'student') => {
     await fetchStructure();
   };
 
+  const reorderSubCourses = async (orderedIds) => {
+    await api.patch(`/courses/${courseId}/subcourses/reorder`, { orderedIds });
+    await fetchStructure();
+  };
+
+  const reorderThemes = async (subCourseId, orderedIds) => {
+    await api.patch(`/subcourses/${subCourseId}/themes/reorder`, { orderedIds });
+    await fetchStructure();
+  };
+
+  const reorderContentBlocks = async (themeId, orderedIds) => {
+    await api.patch(`/themes/${themeId}/contents/reorder`, { orderedIds });
+    await fetchStructure();
+  };
+
   return {
     subCourses,
     files,
@@ -116,5 +131,10 @@ export const useCourseStructure = (courseId, mode = 'student') => {
     editContentBlock,
     removeContentBlock,
     moveContentBlock,
+    reorderSubCourses,
+    reorderThemes,
+    reorderContentBlocks,
   };
 };
+
+

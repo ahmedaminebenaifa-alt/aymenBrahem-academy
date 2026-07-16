@@ -89,6 +89,8 @@ router.delete(
   courseController.deleteCourse
 );
 
+router.get('/:id/overview', courseController.getPublicOverview);
+
 // ==========================================
 // 📁 NESTED ROUTES
 // ==========================================

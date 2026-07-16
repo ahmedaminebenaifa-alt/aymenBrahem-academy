@@ -16,13 +16,13 @@ const CourseCard = ({ course, onEnroll, isEnrolling }) => {
     title,
     description,
     category,
-    contentType,
     coverImage,
     isFree,
     price,
     isEnrolled,
     hasPendingOrder,
-    lessonsCount = 0,
+    subCoursesCount = 0,
+    completedLessons = 0,
     resourcesCount = 0,
   } = course || {};
 
@@ -31,12 +31,11 @@ const CourseCard = ({ course, onEnroll, isEnrolling }) => {
     ? (coverImage.startsWith('http') ? coverImage : `${API_BASE_URL}${coverImage}`)
     : null;
 
-  
-  const targetUrl = `/dashboard/student/courses/${id}/structure`; 
-  
+  const targetUrl = `/dashboard/student/courses/${id}/structure`;
+
+  const progressPercent = subCoursesCount > 0 ? Math.round((completedLessons / subCoursesCount) * 100) : 0;
 
   const handleCardClick = () => {
-    // Passes the name safely via state history context
     navigate(targetUrl, { state: { courseTitle: title } });
   };
 
@@ -112,9 +111,9 @@ const CourseCard = ({ course, onEnroll, isEnrolling }) => {
           <div className="flex items-center gap-4 text-xs text-[var(--on-surface-variant)] mb-5">
             <div className="flex items-center gap-1.5">
               <span className="material-symbols-outlined text-[18px] text-[#d4af37]">play_circle</span>
-              <span>{lessonsCount} درساً</span>
+              <span>{subCoursesCount} دروس</span>
             </div>
-            
+
             {resourcesCount > 0 && (
               <>
                 <div className="w-1 h-1 rounded-full bg-[var(--outline-variant)]"></div>
@@ -125,6 +124,23 @@ const CourseCard = ({ course, onEnroll, isEnrolling }) => {
               </>
             )}
           </div>
+
+          {isEnrolled && subCoursesCount > 0 && (
+            <div className="mb-4">
+              <div className="flex items-center justify-between text-xs font-bold mb-1.5">
+                <span className="text-[var(--on-surface-variant)]">
+                  {completedLessons} من {subCoursesCount} مكتمل
+                </span>
+                <span className="text-[#063c25]">{progressPercent}%</span>
+              </div>
+              <div className="w-full bg-[var(--outline-variant)]/30 rounded-full h-1.5 overflow-hidden">
+                <div
+                  className="bg-[#063c25] h-full rounded-full transition-all duration-500"
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
+            </div>
+          )}
 
           <div className="mt-auto pt-4 border-t border-[var(--outline-variant)]/30">
             {!isEnrolled && (
@@ -143,8 +159,10 @@ const CourseCard = ({ course, onEnroll, isEnrolling }) => {
                   state={{ courseTitle: title }}
                   className="w-full py-2.5 bg-[#063c25]/5 text-[#063c25] rounded text-sm font-bold flex justify-center items-center gap-2 hover:bg-[#063c25] hover:text-white transition-colors duration-200"
                 >
-                  <span className="material-symbols-outlined text-[20px]">import_contacts</span>
-                  متابعة التعلم
+                  <span className="material-symbols-outlined text-[20px]">
+                    {progressPercent === 100 ? 'verified' : 'import_contacts'}
+                  </span>
+                  {progressPercent === 100 ? 'مراجعة الدورة' : 'متابعة التعلم'}
                 </Link>
               ) : isPending ? (
                 <div className="w-full py-2.5 bg-[var(--tertiary)]/10 text-[var(--tertiary)] rounded text-sm font-bold flex justify-center items-center gap-2">

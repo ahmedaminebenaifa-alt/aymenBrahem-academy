@@ -97,3 +97,21 @@ export const moveContentBlock = asyncHandler(async (req, res) => {
   await structureService.moveContentBlock(req.params.id, direction);
   res.status(200).json({ status: 'success' });
 });
+
+export const reorderSubCourses = asyncHandler(async (req, res) => {
+  const { orderedIds } = req.body;
+  await structureService.reorderSubCourses(req.params.courseId, orderedIds);
+  res.status(200).json({ status: 'success' });
+});
+
+export const reorderThemes = asyncHandler(async (req, res) => {
+  const { orderedIds } = req.body;
+  await structureService.reorderThemes(req.params.subCourseId, orderedIds);
+  res.status(200).json({ status: 'success' });
+});
+
+export const reorderContentBlocks = asyncHandler(async (req, res) => {
+  const { orderedIds } = req.body;
+  await structureService.reorderContentBlocks(req.params.themeId, orderedIds);
+  res.status(200).json({ status: 'success' });
+});

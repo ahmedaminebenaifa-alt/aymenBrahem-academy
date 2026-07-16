@@ -30,8 +30,8 @@ export const enrollInCourse = async (userId, courseId) => {
 /**
  * Get all courses a specific student is enrolled in ("My Learning" page)
  */
-export const getMyEnrollments = (userId) => {
-  return prisma.enrollment.findMany({
+export const getMyEnrollments = async (userId) => {
+  const enrollments = await prisma.enrollment.findMany({
     where: { userId },
     include: {
       course: {
@@ -40,15 +40,54 @@ export const getMyEnrollments = (userId) => {
           title: true,
           coverImage: true,
           category: true,
-          contentType: true,
           isFree: true,
           price: true,
           description: true,
-          files: { select: { url: true } }
-        }
-      }
+          files: { select: { url: true } },
+          subCourses: {
+            where: { published: true },
+            select: {
+              themes: {
+                select: {
+                  contents: { select: { id: true } },
+                },
+              },
+            },
+          },
+        },
+      },
     },
-    orderBy: { enrolledAt: 'desc' }
+    orderBy: { enrolledAt: 'desc' },
+  });
+
+  const allContentIds = enrollments.flatMap((e) =>
+    e.course.subCourses.flatMap((sc) => sc.themes.flatMap((t) => t.contents.map((c) => c.id)))
+  );
+
+  const completedRows = allContentIds.length
+    ? await prisma.contentProgress.findMany({
+        where: { userId, contentBlockId: { in: allContentIds } },
+        select: { contentBlockId: true },
+      })
+    : [];
+  const completedSet = new Set(completedRows.map((r) => r.contentBlockId));
+
+  return enrollments.map((e) => {
+    const contentIds = e.course.subCourses.flatMap((sc) =>
+      sc.themes.flatMap((t) => t.contents.map((c) => c.id))
+    );
+    const totalLessons = contentIds.length;
+    const completedLessons = contentIds.filter((id) => completedSet.has(id)).length;
+    const pdfCount = e.course.files.filter((f) => f.url?.toLowerCase().endsWith('.pdf')).length;
+
+    return {
+      ...e.course,
+      enrolledAt: e.enrolledAt,
+      subCoursesCount: e.course.subCourses.length,
+      lessonsCount: totalLessons,
+      completedLessons,
+      resourcesCount: pdfCount,
+    };
   });
 };
 

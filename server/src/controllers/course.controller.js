@@ -88,3 +88,9 @@ export const searchCourses = asyncHandler(async (req, res) => {
   const results = await courseService.searchCourses(q, isAdmin);
   res.status(200).json({ status: 'success', data: results });
 });
+
+
+export const getPublicOverview = asyncHandler(async (req, res) => {
+  const overview = await courseService.getPublicCourseOverview(req.params.id);
+  res.status(200).json({ status: 'success', data: overview });
+});

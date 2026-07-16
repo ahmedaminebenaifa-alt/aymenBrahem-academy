@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 // Public Pages
 import Home from '../pages/Home';
 import LiveSession from '../pages/LiveSession';
+import CourseLandingPage from '../pages/CourseLandingPage';
 // import AuthSection from '../components/AuthSection'; // Add this if it's on a separate route
 
 // Security Wrapper
@@ -40,6 +41,8 @@ export default function AppRoutes() {
       <Route path="/" element={<Home />} />
       {/* <Route path="/login" element={<AuthSection />} /> */}
       <Route path="/live" element={<LiveSession />} />
+
+      <Route path="/courses/:courseId" element={<CourseLandingPage />} />
       {/* ------------------------------------------- */}
       {/* 2. STUDENT DASHBOARD (Nested Routing)       */}
       {/* ------------------------------------------- */}

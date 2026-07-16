@@ -28,6 +28,8 @@ model User {
   hostedSessions LiveSession[]
   orders          Order[]
   approvedOrders  Order[] @relation("OrderApprovals")
+  contentProgress ContentProgress[]
+
 }
 
 enum Role {
@@ -223,6 +225,20 @@ model ContentBlock {
   order     Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  progress ContentProgress[]
 
   @@index([themeId])
+}
+
+model ContentProgress {
+  id             String       @id @default(uuid())
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contentBlockId String
+  contentBlock   ContentBlock @relation(fields: [contentBlockId], references: [id], onDelete: Cascade)
+  completedAt    DateTime     @default(now())
+
+  @@unique([userId, contentBlockId])
+  @@index([userId])
+  @@index([contentBlockId])
 }

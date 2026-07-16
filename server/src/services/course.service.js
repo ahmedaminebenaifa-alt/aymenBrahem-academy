@@ -73,19 +73,42 @@ export const getStudentCourses = async (userId) => {
   const courses = await prisma.course.findMany({
     where: { published: true },
     include: {
-      enrollments: {
-        where: { userId }
+      enrollments: { where: { userId } },
+      files: { select: { url: true } },
+      subCourses: {
+        where: { published: true },
+        select: {
+          themes: {
+            select: {
+              contents: { select: { id: true } },
+            },
+          },
+        },
       },
-      files: {
-        select: { url: true }
-      }
     },
-    orderBy: { createdAt: 'desc' }
+    orderBy: { createdAt: 'desc' },
   });
 
-  return courses.map(course => {
+  const allContentIds = courses.flatMap((c) =>
+    c.subCourses.flatMap((sc) => sc.themes.flatMap((t) => t.contents.map((ct) => ct.id)))
+  );
+
+  const completedRows = allContentIds.length
+    ? await prisma.contentProgress.findMany({
+        where: { userId, contentBlockId: { in: allContentIds } },
+        select: { contentBlockId: true },
+      })
+    : [];
+  const completedSet = new Set(completedRows.map((r) => r.contentBlockId));
+
+  return courses.map((course) => {
     const isEnrolled = course.enrollments.length > 0;
-    const pdfCount = course.files.filter(f => f.url?.toLowerCase().endsWith('.pdf')).length;
+    const pdfCount = course.files.filter((f) => f.url?.toLowerCase().endsWith('.pdf')).length;
+    const contentIds = course.subCourses.flatMap((sc) =>
+      sc.themes.flatMap((t) => t.contents.map((ct) => ct.id))
+    );
+    const lessonsCount = contentIds.length;
+    const completedLessons = contentIds.filter((id) => completedSet.has(id)).length;
 
     return {
       id: course.id,
@@ -94,13 +117,15 @@ export const getStudentCourses = async (userId) => {
       category: course.category,
       isFree: course.isFree,
       price: course.price,
-      coverImage: course.coverImage, 
+      coverImage: course.coverImage,
       isEnrolled,
-      resourcesCount: pdfCount
+      subCoursesCount: course.subCourses.length,
+      lessonsCount,
+      completedLessons,
+      resourcesCount: pdfCount,
     };
   });
 };
-
 /**
  * Fetch course content (files) ONLY if the student is successfully enrolled
  */
@@ -156,4 +181,48 @@ export const searchCourses = async (query, isAdmin) => {
     take: 8,
     orderBy: { createdAt: 'desc' },
   });
+};
+
+export const getPublicCourseOverview = async (courseId) => {
+  const course = await prisma.course.findUnique({
+    where: { id: courseId, published: true },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      category: true,
+      coverImage: true,
+      isFree: true,
+      price: true,
+      subCourses: {
+        where: { published: true },
+        orderBy: { order: 'asc' },
+        select: {
+          id: true,
+          title: true,
+          themes: {
+            orderBy: { order: 'asc' },
+            select: { id: true, title: true }, // titles only — no contents/bodies
+          },
+        },
+      },
+      files: { select: { id: true } }, // count only, not actual URLs
+    },
+  });
+
+  if (!course) {
+    throw new ApiError(404, 'الدورة غير موجودة أو غير منشورة');
+  }
+
+  return {
+    id: course.id,
+    title: course.title,
+    description: course.description,
+    category: course.category,
+    coverImage: course.coverImage,
+    isFree: course.isFree,
+    price: course.price,
+    subCourses: course.subCourses,
+    resourcesCount: course.files.length,
+  };
 };

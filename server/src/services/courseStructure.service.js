@@ -150,3 +150,27 @@ export const moveContentBlock = async (id, direction) => {
   ]);
   return true;
 };
+
+export const reorderSubCourses = async (courseId, orderedIds) => {
+  await prisma.$transaction(
+    orderedIds.map((id, index) =>
+      prisma.subCourse.update({ where: { id }, data: { order: index } })
+    )
+  );
+};
+
+export const reorderThemes = async (subCourseId, orderedIds) => {
+  await prisma.$transaction(
+    orderedIds.map((id, index) =>
+      prisma.theme.update({ where: { id }, data: { order: index } })
+    )
+  );
+};
+
+export const reorderContentBlocks = async (themeId, orderedIds) => {
+  await prisma.$transaction(
+    orderedIds.map((id, index) =>
+      prisma.contentBlock.update({ where: { id }, data: { order: index } })
+    )
+  );
+};

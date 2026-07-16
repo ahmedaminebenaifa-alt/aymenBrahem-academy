@@ -25,4 +25,8 @@ router.patch('/contents/:id', verifyAuth, requireRole('ADMIN'), controller.updat
 router.delete('/contents/:id', verifyAuth, requireRole('ADMIN'), controller.deleteContentBlock);
 router.patch('/contents/:id/move', verifyAuth, requireRole('ADMIN'), controller.moveContentBlock);
 
+router.patch('/courses/:courseId/subcourses/reorder', verifyAuth, requireRole('ADMIN'), controller.reorderSubCourses);
+router.patch('/subcourses/:subCourseId/themes/reorder', verifyAuth, requireRole('ADMIN'), controller.reorderThemes);
+router.patch('/themes/:themeId/contents/reorder', verifyAuth, requireRole('ADMIN'), controller.reorderContentBlocks);
+
 export default router;
