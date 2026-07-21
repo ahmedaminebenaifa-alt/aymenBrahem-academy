@@ -1,72 +1,91 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { loginAPI, registerAPI, getProfileAPI } from '../api/auth.api.js';
-import api from '../api/axios.js';
+import { useNavigate } from 'react-router-dom';
+import { loginAPI, registerAPI, getProfileAPI, refreshAPI, logoutAPI, logoutAllAPI } from '../api/auth.api.js';
+import { setAccessToken } from '../api/axios.js';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isInitializing, setIsInitializing] = useState(true);
+  const navigate = useNavigate();
 
-  // 1. Check if user is already logged in when the app loads
+  // On app load: no token exists in memory yet (page was just reloaded).
+  // Try silent refresh using the httpOnly cookie — if it succeeds, we're still logged in.
   useEffect(() => {
     const initAuth = async () => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        try {
-          // If token exists, fetch their latest profile data
-          const userData = await getProfileAPI();
-          setUser(userData);
-        } catch (error) {
-          // If token is invalid/expired, the axios interceptor clears it
-          setUser(null);
-        }
+      try {
+        const data = await refreshAPI();
+        setAccessToken(data.accessToken);
+        setUser(data.user);
+      } catch {
+        setAccessToken(null);
+        setUser(null);
+      } finally {
+        setIsInitializing(false);
       }
-      setIsInitializing(false);
     };
 
     initAuth();
   }, []);
 
-  // 2. The Login Function (Called by your AuthSection.jsx)
+  // Listen for the axios interceptor's "session truly expired" signal
+  useEffect(() => {
+    const handleExpired = () => {
+      setUser(null);
+      setAccessToken(null);
+      if (!window.location.pathname.startsWith('/login')) {
+        navigate('/login');
+      }
+    };
+    window.addEventListener('auth:session-expired', handleExpired);
+    return () => window.removeEventListener('auth:session-expired', handleExpired);
+  }, [navigate]);
+
   const login = async (email, password) => {
     const data = await loginAPI({ email, password });
-    
-    // Save token to localStorage so Axios interceptor can use it
-    localStorage.setItem('token', data.token);
-    
-    // Update the React state
+    setAccessToken(data.accessToken);
     setUser(data.user);
     return data;
   };
 
-  // 3. The Register Function (Called by your AuthSection.jsx)
   const register = async (email, password, name) => {
     const data = await registerAPI({ email, password, name });
-    
-    localStorage.setItem('token', data.token);
+    setAccessToken(data.accessToken);
     setUser(data.user);
     return data;
   };
 
-  // 4. The Logout Function
-  const logout = () => {
-    localStorage.removeItem('token');
-    setUser(null);
-    // Optional: Redirect to home
-    window.location.href = '/';
+  const logout = async () => {
+    try {
+      await logoutAPI();
+    } finally {
+      setAccessToken(null);
+      setUser(null);
+      navigate('/');
+    }
+  };
+
+  const logoutAllDevices = async () => {
+    try {
+      await logoutAllAPI();
+    } finally {
+      setAccessToken(null);
+      setUser(null);
+      navigate('/');
+    }
   };
 
   const updateUser = (updatedFields) => {
     setUser((prev) => ({ ...prev, ...updatedFields }));
   };
-  // Prevent flashing the login screen while checking local storage on refresh
+
   if (isInitializing) {
     return <div className="flex justify-center items-center h-screen">جاري التحميل...</div>;
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, login, register, logout, logoutAllDevices, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

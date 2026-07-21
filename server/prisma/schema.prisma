@@ -29,7 +29,7 @@ model User {
   orders          Order[]
   approvedOrders  Order[] @relation("OrderApprovals")
   contentProgress ContentProgress[]
-
+  refreshTokens RefreshToken[]
 }
 
 enum Role {
@@ -241,4 +241,18 @@ model ContentProgress {
   @@unique([userId, contentBlockId])
   @@index([userId])
   @@index([contentBlockId])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  family    String   // shared across one rotation chain (one login session/device)
+  revoked   Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([family])
 }

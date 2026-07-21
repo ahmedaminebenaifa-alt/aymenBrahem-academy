@@ -7,7 +7,7 @@ import routes from './routes/index.js';
 import { errorHandler } from './middleware/error.middleware.js';
 import { ApiError } from './utils/ApiError.js';
 import { fileURLToPath } from 'url';
-
+import cookieParser from 'cookie-parser';
 
 const app = express();
 
@@ -51,7 +51,7 @@ app.use(cors({
 // ============================================================
 // 2. Request Parsers
 // ============================================================
-
+app.use(cookieParser());
 app.use((req, res, next) => {
   if (req.path === '/api/live/webhook') return next(); // raw body handled in live.routes.js
   express.json({ limit: '10kb' })(req, res, next);

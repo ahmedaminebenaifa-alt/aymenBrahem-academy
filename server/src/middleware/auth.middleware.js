@@ -1,4 +1,4 @@
-import { verifyToken } from '../utils/jwt.js';
+import { verifyAccessToken } from '../utils/jwt.js';
 import { ApiError } from '../utils/ApiError.js';
 
 export const verifyAuth = (req, res, next) => {
@@ -11,7 +11,7 @@ export const verifyAuth = (req, res, next) => {
   const token = authHeader.split(' ')[1];
 
   try {
-    const decoded = verifyToken(token);
+    const decoded = verifyAccessToken(token);
     req.user = decoded;
     next();
   } catch (err) {
