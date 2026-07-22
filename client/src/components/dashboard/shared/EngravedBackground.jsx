@@ -1,13 +1,20 @@
 import React, { useId } from 'react';
+import { useTheme } from '../../../hooks/useTheme';
 
 export default function EngravedBackground({
-  color = '#e2b4bd',
+  color = 'var(--outline-variant)',
+  darkColor = 'var(--on-primary-container)',
   opacity = 0.25,
+  darkOpacityMultiplier = 3,
   animated = false,
 }) {
   const uid = useId();
   const filterId = `luxury-depth-${uid}`;
   const patternId = `premium-lattice-${uid}`;
+  const { isDark } = useTheme();
+
+  const effectiveColor = isDark ? darkColor : color;
+  const effectiveOpacity = isDark ? Math.min(opacity * darkOpacityMultiplier, 0.4) : opacity;
 
   return (
     <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
@@ -15,7 +22,7 @@ export default function EngravedBackground({
         width="100%"
         height="100%"
         className={`absolute inset-0 ${animated ? 'animate-ambient-pan' : ''}`}
-        style={{ opacity }}
+        style={{ opacity: effectiveOpacity, transition: 'opacity 0.3s ease' }}
       >
         <defs>
           <filter id={filterId} x="-20%" y="-20%" width="140%" height="140%">
@@ -24,7 +31,7 @@ export default function EngravedBackground({
           </filter>
 
           <pattern id={patternId} width="120" height="120" patternUnits="userSpaceOnUse" patternTransform="scale(0.8)">
-            <g stroke={color} fill="none" filter={`url(#${filterId})`}>
+            <g stroke={effectiveColor} fill="none" filter={`url(#${filterId})`}>
               <path strokeWidth="0.8" opacity="0.4" d="M0 0 L120 120 M120 0 L0 120 M60 0 L60 120 M0 60 L120 60" />
 
               <path strokeWidth="1.2" opacity="0.6" d="M60 0 L120 60 L60 120 L0 60 Z" />

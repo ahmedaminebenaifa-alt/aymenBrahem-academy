@@ -57,6 +57,57 @@
   --on-tertiary-container: #c6a15a;
 }
 
+/* 2b. Dark mode overrides — both the Tailwind @theme tokens and the plain
+   CSS variables, so bg-surface utilities AND var(--surface) usage both re-theme */
+.dark {
+  --color-surface: #10130f;
+  --color-surface-container-lowest: #191c17;
+  --color-surface-container-low: #1e211c;
+  --color-surface-container: #262a24;
+  --color-surface-container-high: #30352d;
+
+  --color-on-surface: #e2e3dd;
+  --color-on-surface-variant: #c1c8c2;
+  --color-outline: #8b938c;
+  --color-outline-variant: #414844;
+
+  --color-primary: #86af99;
+  --color-on-primary: #012d1d;
+  --color-primary-container: #1b4332;
+  --color-on-primary-container: #c1ecd4;
+  --color-primary-fixed: #1b4332;
+  --color-on-primary-fixed: #c1ecd4;
+
+  --color-secondary: #a8a7a3;
+
+  --color-tertiary-fixed: #4f3800;
+  --color-on-tertiary-container: #e9c176;
+
+  --color-tertiary: #ffdea5;
+  --color-on-tertiary: #4f3800;
+  --color-tertiary-container: #5d4201;
+  --color-error: #ffb4ab;
+
+  /* plain --x versions, for the homepage's direct var(--x) usage */
+  --surface: #10130f;
+  --surface-container-lowest: #191c17;
+  --surface-container-low: #1e211c;
+  --surface-container: #262a24;
+  --surface-container-high: #30352d;
+  --on-surface: #e2e3dd;
+  --on-surface-variant: #c1c8c2;
+  --outline: #8b938c;
+  --outline-variant: #414844;
+  --primary: #86af99;
+  --on-primary: #012d1d;
+  --primary-container: #1b4332;
+  --on-primary-container: #c1ecd4;
+  --primary-fixed: #1b4332;
+  --on-primary-fixed: #c1ecd4;
+  --secondary: #a8a7a3;
+  --tertiary-fixed: #4f3800;
+  --on-tertiary-container: #e9c176;
+}
 /* 3. Base styles */
 html {
   scroll-behavior: smooth;

@@ -13,23 +13,20 @@ export function parseInlineMarkdown(text) {
     }
 
     if (match[1] !== undefined) {
-      // [text](url) — link text itself can't contain further markdown here, kept simple
       nodes.push(
         <a
           key={key++}
           href={match[2]}
           target="_blank"
           rel="noopener noreferrer"
-          className="font-semibold text-[#025c3a] underline decoration-[#025c3a]/30 decoration-2 underline-offset-4 rounded-sm px-0.5 transition-all duration-[500ms] ease-[cubic-bezier(0.23,1,0.32,1)] hover:decoration-[#025c3a] hover:text-[#012d1d] hover:bg-[#025c3a]/[0.06] focus:outline-none"
+          className="font-semibold text-primary underline decoration-primary/30 decoration-2 underline-offset-4 rounded-sm px-0.5 transition-all duration-[500ms] ease-[cubic-bezier(0.23,1,0.32,1)] hover:decoration-on-primary-container hover:text-on-primary-container hover:bg-primary/[0.06] focus:outline-none"
         >
           {match[1]}
         </a>
       );
     } else if (match[3] !== undefined) {
-      // **bold** — recursively parse inner content so nested links/italics still work
       nodes.push(<strong key={key++} className="font-bold">{parseInlineMarkdown(match[3])}</strong>);
     } else if (match[4] !== undefined) {
-      // *italic* — same recursion
       nodes.push(<em key={key++} className="italic">{parseInlineMarkdown(match[4])}</em>);
     }
 

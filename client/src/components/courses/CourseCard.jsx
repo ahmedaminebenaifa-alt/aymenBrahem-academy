@@ -23,6 +23,7 @@ const CourseCard = ({ course, onEnroll, isEnrolling }) => {
     hasPendingOrder,
     subCoursesCount = 0,
     completedLessons = 0,
+    lessonsCount = 0,
     resourcesCount = 0,
   } = course || {};
 
@@ -32,8 +33,7 @@ const CourseCard = ({ course, onEnroll, isEnrolling }) => {
     : null;
 
   const targetUrl = `/dashboard/student/courses/${id}/structure`;
-
-  const progressPercent = subCoursesCount > 0 ? Math.round((completedLessons / subCoursesCount) * 100) : 0;
+  const progressPercent = lessonsCount > 0 ? Math.round((completedLessons / lessonsCount) * 100) : 0;
 
   const handleCardClick = () => {
     navigate(targetUrl, { state: { courseTitle: title } });
@@ -60,11 +60,11 @@ const CourseCard = ({ course, onEnroll, isEnrolling }) => {
         }
       `}</style>
 
-      <article className="group elegant-float bg-[var(--surface-container-lowest)] rounded-xl flex flex-col h-full overflow-hidden border border-[var(--outline-variant)]/40 relative">
-        <div className="absolute top-0 left-0 right-0 h-1 bg-[#d4af37] z-20"></div>
+      <article className="group elegant-float bg-surface-container-lowest rounded-xl flex flex-col h-full overflow-hidden border border-outline-variant/40 relative">
+        <div className="absolute top-0 left-0 right-0 h-1 bg-on-tertiary-container z-20"></div>
 
         <div
-          className={`aspect-[16/10] w-full relative overflow-hidden bg-[#063c25]/5 ${isEnrolled ? 'cursor-pointer' : ''}`}
+          className={`aspect-[16/10] w-full relative overflow-hidden bg-primary/5 ${isEnrolled ? 'cursor-pointer' : ''}`}
           onClick={handleCardClick}
           role={isEnrolled ? 'button' : undefined}
           tabIndex={isEnrolled ? 0 : undefined}
@@ -78,75 +78,75 @@ const CourseCard = ({ course, onEnroll, isEnrolling }) => {
               onError={() => setImageError(true)}
             />
           ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center bg-[#063c25] text-[#d4af37]/60 arabesque-pattern relative">
+            <div className="w-full h-full flex flex-col items-center justify-center bg-primary text-on-tertiary-container/60 arabesque-pattern relative">
               <div className="absolute inset-0 bg-black/20"></div>
               <span className="material-symbols-outlined text-4xl mb-3 relative z-10 select-none">local_library</span>
-              <div className="w-10 h-[1px] bg-[#d4af37]/40 relative z-10"></div>
+              <div className="w-10 h-[1px] bg-on-tertiary-container/40 relative z-10"></div>
             </div>
           )}
 
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
           {category && (
-            <span className="absolute top-4 right-4 bg-[#063c25] text-[#d4af37] px-3 py-1 text-xs font-bold rounded shadow-sm border border-[#d4af37]/20 z-10">
+            <span className="absolute top-4 right-4 bg-primary text-on-tertiary-container px-3 py-1 text-xs font-bold rounded shadow-sm border border-on-tertiary-container/20 z-10">
               {getCategoryLabel(category)}
             </span>
           )}
         </div>
 
-        <div className="p-5 flex flex-col flex-1 bg-[var(--surface-container-lowest)]">
+        <div className="p-5 flex flex-col flex-1 bg-surface-container-lowest">
           <h3
             onClick={handleCardClick}
-            className={`text-lg font-bold font-arabic text-[var(--on-surface)] leading-tight mb-2 line-clamp-2 transition-colors duration-200 ${
-              isEnrolled ? 'cursor-pointer hover:text-[#d4af37]' : 'group-hover:text-[#d4af37]'
+            className={`text-lg font-bold font-arabic text-on-surface leading-tight mb-2 line-clamp-2 transition-colors duration-200 ${
+              isEnrolled ? 'cursor-pointer hover:text-on-tertiary-container' : 'group-hover:text-on-tertiary-container'
             }`}
           >
             {title || 'بدون عنوان'}
           </h3>
 
-          <p className="text-sm text-[var(--on-surface-variant)] leading-relaxed line-clamp-2 mb-4 flex-1">
+          <p className="text-sm text-on-surface-variant leading-relaxed line-clamp-2 mb-4 flex-1">
             {description || 'لا يوجد وصف متاح لهذه الدورة حالياً.'}
           </p>
 
-          <div className="flex items-center gap-4 text-xs text-[var(--on-surface-variant)] mb-5">
+          <div className="flex items-center gap-4 text-xs text-on-surface-variant mb-5">
             <div className="flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-[18px] text-[#d4af37]">play_circle</span>
+              <span className="material-symbols-outlined text-[18px] text-on-tertiary-container">play_circle</span>
               <span>{subCoursesCount} دروس</span>
             </div>
 
             {resourcesCount > 0 && (
               <>
-                <div className="w-1 h-1 rounded-full bg-[var(--outline-variant)]"></div>
+                <div className="w-1 h-1 rounded-full bg-outline-variant"></div>
                 <div className="flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[18px] text-[#d4af37]">menu_book</span>
+                  <span className="material-symbols-outlined text-[18px] text-on-tertiary-container">menu_book</span>
                   <span>{resourcesCount} مصادر</span>
                 </div>
               </>
             )}
           </div>
 
-          {isEnrolled && subCoursesCount > 0 && (
+          {isEnrolled && lessonsCount > 0 && (
             <div className="mb-4">
               <div className="flex items-center justify-between text-xs font-bold mb-1.5">
-                <span className="text-[var(--on-surface-variant)]">
-                  {completedLessons} من {subCoursesCount} مكتمل
+                <span className="text-on-surface-variant">
+                  {completedLessons} من {lessonsCount} مكتمل
                 </span>
-                <span className="text-[#063c25]">{progressPercent}%</span>
+                <span className="text-primary">{progressPercent}%</span>
               </div>
-              <div className="w-full bg-[var(--outline-variant)]/30 rounded-full h-1.5 overflow-hidden">
+              <div className="w-full bg-outline-variant/30 rounded-full h-1.5 overflow-hidden">
                 <div
-                  className="bg-[#063c25] h-full rounded-full transition-all duration-500"
+                  className="bg-primary h-full rounded-full transition-all duration-500"
                   style={{ width: `${progressPercent}%` }}
                 />
               </div>
             </div>
           )}
 
-          <div className="mt-auto pt-4 border-t border-[var(--outline-variant)]/30">
+          <div className="mt-auto pt-4 border-t border-outline-variant/30">
             {!isEnrolled && (
               <div className="flex items-center justify-between mb-4">
-                <span className="text-sm text-[var(--on-surface-variant)]">قيمة الاشتراك</span>
-                <span className={`text-base font-bold ${isFree ? 'text-[#063c25]' : 'text-[var(--on-surface)]'}`}>
+                <span className="text-sm text-on-surface-variant">قيمة الاشتراك</span>
+                <span className={`text-base font-bold ${isFree ? 'text-primary' : 'text-on-surface'}`}>
                   {isFree ? 'مجانية بالكامل' : `${Number(price).toLocaleString('en-US')} د.ت`}
                 </span>
               </div>
@@ -157,7 +157,7 @@ const CourseCard = ({ course, onEnroll, isEnrolling }) => {
                 <Link
                   to={targetUrl}
                   state={{ courseTitle: title }}
-                  className="w-full py-2.5 bg-[#063c25]/5 text-[#063c25] rounded text-sm font-bold flex justify-center items-center gap-2 hover:bg-[#063c25] hover:text-white transition-colors duration-200"
+                  className="w-full py-2.5 bg-primary/5 text-primary rounded text-sm font-bold flex justify-center items-center gap-2 hover:bg-primary hover:text-on-primary transition-colors duration-200"
                 >
                   <span className="material-symbols-outlined text-[20px]">
                     {progressPercent === 100 ? 'verified' : 'import_contacts'}
@@ -165,7 +165,7 @@ const CourseCard = ({ course, onEnroll, isEnrolling }) => {
                   {progressPercent === 100 ? 'مراجعة الدورة' : 'متابعة التعلم'}
                 </Link>
               ) : isPending ? (
-                <div className="w-full py-2.5 bg-[var(--tertiary)]/10 text-[var(--tertiary)] rounded text-sm font-bold flex justify-center items-center gap-2">
+                <div className="w-full py-2.5 bg-tertiary/10 text-tertiary rounded text-sm font-bold flex justify-center items-center gap-2">
                   <span className="material-symbols-outlined text-[20px] animate-pulse">hourglass_top</span>
                   بانتظار موافقة الإدارة
                 </div>
@@ -174,7 +174,7 @@ const CourseCard = ({ course, onEnroll, isEnrolling }) => {
                   onClick={handleActionClick}
                   disabled={isEnrolling}
                   aria-label={isFree ? `سجل مجاناً في ${title}` : `اشترك في ${title}`}
-                  className="w-full py-2.5 bg-[#063c25] text-white rounded text-sm font-bold flex justify-center items-center gap-2 hover:bg-[#084c30] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                  className="w-full py-2.5 bg-primary text-on-primary rounded text-sm font-bold flex justify-center items-center gap-2 hover:opacity-90 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
                 >
                   {isEnrolling ? (
                     <>
@@ -183,7 +183,7 @@ const CourseCard = ({ course, onEnroll, isEnrolling }) => {
                     </>
                   ) : (
                     <>
-                      <span className="material-symbols-outlined text-[20px] text-[#d4af37]">
+                      <span className="material-symbols-outlined text-[20px] text-on-tertiary-container">
                         {isFree ? 'add_circle' : 'shopping_cart'}
                       </span>
                       {isFree ? 'سجل مجاناً' : 'اشترك الآن'}

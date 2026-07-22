@@ -159,27 +159,132 @@ export const getCourseContent = async (courseId, userId) => {
 export const searchCourses = async (query, isAdmin) => {
   if (!query || query.trim().length < 2) return [];
 
-  const where = {
-    OR: [
-      { title: { contains: query, mode: 'insensitive' } },
-      { description: { contains: query, mode: 'insensitive' } },
-    ],
-    ...(isAdmin ? {} : { published: true }),
-  };
+  const words = query.trim().split(/\s+/).filter(Boolean);
 
-  return prisma.course.findMany({
-    where,
+  // Each word must appear SOMEWHERE in the course — title, description, or
+  // anywhere in its SubCourse/Theme/ContentBlock tree — not necessarily the same spot.
+  const wordMatchesAnywhere = words.map((word) => ({
+    OR: [
+      { title: { contains: word, mode: 'insensitive' } },
+      { description: { contains: word, mode: 'insensitive' } },
+      {
+        subCourses: {
+          some: {
+            OR: [
+              { title: { contains: word, mode: 'insensitive' } },
+              {
+                themes: {
+                  some: {
+                    OR: [
+                      { title: { contains: word, mode: 'insensitive' } },
+                      {
+                        contents: {
+                          some: {
+                            OR: [
+                              { title: { contains: word, mode: 'insensitive' } },
+                              { body: { contains: word, mode: 'insensitive' } },
+                            ],
+                          },
+                        },
+                      },
+                    ],
+                  },
+                },
+              },
+            ],
+          },
+        },
+      },
+    ],
+  }));
+
+  const courses = await prisma.course.findMany({
+    where: {
+      AND: wordMatchesAnywhere,
+      ...(isAdmin ? {} : { published: true }),
+    },
     select: {
       id: true,
       title: true,
+      description: true,
       category: true,
       coverImage: true,
       isFree: true,
       price: true,
       published: true,
+      subCourses: {
+        where: isAdmin ? {} : { published: true },
+        select: {
+          title: true,
+          themes: {
+            select: {
+              title: true,
+              contents: { select: { title: true, body: true } },
+            },
+          },
+        },
+      },
     },
     take: 8,
     orderBy: { createdAt: 'desc' },
+  });
+
+  // Walk each course's tree to find WHERE the match actually is, for display purposes.
+  // Checks title -> description -> subcourse titles -> theme titles -> content titles -> content bodies,
+  // stopping at the first hit (title match is more relevant than a buried content match).
+  const lowerWords = words.map((w) => w.toLowerCase());
+  const containsAnyWord = (text) => !!text && lowerWords.some((w) => text.toLowerCase().includes(w));
+
+  return courses.map((course) => {
+    let matchLocation = 'title';
+    let matchText = course.title;
+
+    if (!containsAnyWord(course.title)) {
+      if (containsAnyWord(course.description)) {
+        matchLocation = 'description';
+        matchText = course.description;
+      } else {
+        search:
+        for (const sc of course.subCourses) {
+          if (containsAnyWord(sc.title)) {
+            matchLocation = 'subcourse';
+            matchText = sc.title;
+            break search;
+          }
+          for (const theme of sc.themes) {
+            if (containsAnyWord(theme.title)) {
+              matchLocation = 'theme';
+              matchText = theme.title;
+              break search;
+            }
+            for (const content of theme.contents) {
+              if (containsAnyWord(content.title)) {
+                matchLocation = 'content';
+                matchText = content.title;
+                break search;
+              }
+              if (containsAnyWord(content.body)) {
+                matchLocation = 'content';
+                matchText = content.body.slice(0, 120); // snippet, not the whole lesson body
+                break search;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return {
+      id: course.id,
+      title: course.title,
+      category: course.category,
+      coverImage: course.coverImage,
+      isFree: course.isFree,
+      price: course.price,
+      published: course.published,
+      matchLocation,
+      matchText,
+    };
   });
 };
 
