@@ -1,5 +1,5 @@
 import api from './axios.js';
-
+//Add comment so i can commit to github to rebuild my frontend in cloudpages
 export const loginAPI = async (credentials) => {
   const response = await api.post('/auth/login', credentials);
   return response.data;
