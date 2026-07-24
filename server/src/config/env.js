@@ -16,4 +16,7 @@ export const env = {
   jwtRefreshSecret: process.env.JWT_REFRESH_SECRET,
   cookieDomain: process.env.COOKIE_DOMAIN || undefined, // e.g. '.yourdomain.com' in prod, undefined for localhost
   isProduction: process.env.NODE_ENV === 'production',
+  cloudinaryCloudName: process.env.CLOUDINARY_CLOUD_NAME,
+  cloudinaryApiKey: process.env.CLOUDINARY_API_KEY,
+  cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET,
 };

@@ -1,9 +1,6 @@
-import path from 'path';
 import * as courseFileService from '../services/courseFile.service.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
-
-const UPLOAD_DIR = path.join(process.cwd(), 'uploads');
 
 export const ensureCourseExists = asyncHandler(async (req, res, next) => {
   await courseFileService.courseExists(req.params.courseId);
@@ -15,15 +12,19 @@ export const uploadFile = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'No file uploaded');
   }
 
-  const filePath = path.join(UPLOAD_DIR, req.file.filename);
-  await courseFileService.verifyPdfContent(filePath); // throws + cleans up if not a real PDF
+  // Validate the real file content BEFORE it ever reaches Cloudinary
+  await courseFileService.verifyPdfContent(req.file.buffer);
+
+  const result = await courseFileService.uploadBufferToCloudinary(
+    req.file.buffer,
+    req.file.originalname
+  );
 
   const { courseId } = req.params;
-  const fileUrl = `/uploads/${req.file.filename}`;
-
   const file = await courseFileService.addFileToCourse(courseId, {
     name: req.file.originalname,
-    url: fileUrl,
+    url: result.secure_url,
+    cloudinaryPublicId: result.public_id,
     order: req.body.order,
   });
 

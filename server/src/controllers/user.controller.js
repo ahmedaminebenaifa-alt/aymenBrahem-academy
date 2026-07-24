@@ -34,7 +34,7 @@ export const uploadAvatar = asyncHandler(async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'No image file uploaded' });
   }
-  const imageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+  const imageUrl = req.file.path; // Cloudinary URL, set by multer-storage-cloudinary
   const updated = await userService.updateProfileImage(req.user.id, imageUrl);
   res.status(200).json({ status: 'success', data: updated });
 });

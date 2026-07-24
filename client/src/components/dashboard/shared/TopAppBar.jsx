@@ -12,7 +12,7 @@ const isMac = typeof navigator !== 'undefined' && /Mac|iPod|iPhone|iPad/.test(na
 const SHORTCUT_LABEL = isMac ? '⌘K' : 'Ctrl K';
 
 const MATCH_LABELS = {
-  title: null, // no extra label needed — title match is obvious, it's already shown
+  title: null,
   description: 'في الوصف',
   subcourse: 'في وحدة',
   theme: 'في موضوع',
@@ -65,7 +65,6 @@ function SearchInput({ query, setQuery, isSearchOpen, setIsSearchOpen, clear, re
             </div>
           ) : (
             <div className="p-2">
-              
               {results.map((course) => (
                 <button
                   key={course.id}
@@ -84,7 +83,7 @@ function SearchInput({ query, setQuery, isSearchOpen, setIsSearchOpen, clear, re
                       {highlightMatches(course.title, query)}
                     </p>
 
-                    {course.matchLocation !== 'title' && course.matchText && (
+                    {course.matchLocation && course.matchLocation !== 'title' && course.matchText && (
                       <p className="text-xs text-[var(--on-surface-variant)]/80 truncate mt-0.5 flex items-center gap-1">
                         {MATCH_LABELS[course.matchLocation] && (
                           <span className="text-[var(--primary)]/70 font-bold shrink-0">{MATCH_LABELS[course.matchLocation]}:</span>
@@ -147,9 +146,11 @@ export default function TopAppBar() {
     setIsSearchOpen(false);
     if (isAdmin) {
       navigate(`/dashboard/admin/courses/${course.id}/edit`);
-    } else {
-      navigate(`/dashboard/student/courses/${course.id}`);
+      return;
     }
+    navigate(`/dashboard/student/courses/${course.id}/structure`, {
+      state: { courseTitle: course.title },
+    });
   };
 
   useEffect(() => {

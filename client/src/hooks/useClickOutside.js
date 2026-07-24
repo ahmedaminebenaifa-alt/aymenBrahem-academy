@@ -5,18 +5,18 @@ export const useClickOutside = (handler) => {
 
   useEffect(() => {
     const maybeHandler = (event) => {
-      // If the click is outside the referenced element, trigger the handler
       if (domNode.current && !domNode.current.contains(event.target)) {
         handler();
       }
     };
 
-    // Listen for mousedown events
-    document.addEventListener('mousedown', maybeHandler);
-    
-    // Cleanup function to remove the listener when the component unmounts
+    // Listen on 'click', not 'mousedown' — mousedown fires before the click
+    // event on the target element, which would unmount dropdown content
+    // (like search results) before its own onClick ever gets to run.
+    document.addEventListener('click', maybeHandler);
+
     return () => {
-      document.removeEventListener('mousedown', maybeHandler);
+      document.removeEventListener('click', maybeHandler);
     };
   }, [handler]);
 

@@ -73,6 +73,7 @@ model CourseFile {
   url       String
   order     Int      @default(0)
   createdAt DateTime @default(now())
+  cloudinaryPublicId String?
 
   @@index([courseId])
 }
