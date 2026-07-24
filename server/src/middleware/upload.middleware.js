@@ -11,8 +11,8 @@ const courseFileStorage = new CloudinaryStorage({
   },
 });
 
-export const uploadCourseFile = multer({
-  storage: multer.memoryStorage(),
+export const upload = multer({
+  storage: multer.memoryStorage(), 
   limits: { fileSize: 20 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     if (file.mimetype !== 'application/pdf') {
@@ -21,3 +21,12 @@ export const uploadCourseFile = multer({
     cb(null, true);
   },
 });
+
+export const handleUploadError = (err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    return res.status(400).json({ success: false, message: err.message });
+  } else if (err) {
+    return res.status(400).json({ success: false, message: err.message });
+  }
+  next();
+};
