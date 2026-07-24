@@ -11,7 +11,7 @@ const setRefreshCookie = (res, token) => {
   res.cookie(REFRESH_COOKIE_NAME, token, {
     httpOnly: true,
     secure: env.isProduction, // HTTPS only in prod; allow http on localhost for dev
-    sameSite: 'lax',
+    sameSite: 'none',
     path: REFRESH_COOKIE_PATH,
     domain: env.cookieDomain,
     maxAge: REFRESH_TOKEN_TTL_MS,
@@ -22,7 +22,7 @@ const clearRefreshCookie = (res) => {
   res.clearCookie(REFRESH_COOKIE_NAME, {
     httpOnly: true,
     secure: env.isProduction,
-    sameSite: 'lax',
+    sameSite: 'none',
     path: REFRESH_COOKIE_PATH,
     domain: env.cookieDomain,
   });
