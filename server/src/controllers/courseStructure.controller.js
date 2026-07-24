@@ -1,6 +1,7 @@
 import * as structureService from '../services/courseStructure.service.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
+import prisma from '../config/db.js';
 
 // ── Student ──
 export const getStructure = asyncHandler(async (req, res) => {
