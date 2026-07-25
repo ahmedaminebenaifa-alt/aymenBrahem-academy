@@ -1,6 +1,7 @@
 
 import { AccessToken } from 'livekit-server-sdk';
 import { ApiError } from '../utils/ApiError.js';
+import { RoomServiceClient } from 'livekit-server-sdk';
 import prisma from '../config/db.js'; 
 
 
@@ -50,7 +51,6 @@ export const generateLiveToken = async (user, roomName) => {
     throw new ApiError(500, 'LiveKit credentials are not configured');
   }
 
-  // Only issue a token for a room that's actually live right now
   const session = await prisma.liveSession.findFirst({
     where: { roomName, status: 'LIVE' },
   });
@@ -61,16 +61,18 @@ export const generateLiveToken = async (user, roomName) => {
   const at = new AccessToken(process.env.LIVEKIT_API_KEY, process.env.LIVEKIT_API_SECRET, {
     identity: user.id,
     name: user.name,
+    ttl: '3h', 
   });
 
-  const isHost = user.role === 'ADMIN'; // fine for MVP: any admin can publish
+  const isHost = user.role === 'ADMIN';
 
   at.addGrant({
     roomJoin: true,
     room: roomName,
-    canPublish: isHost,
-    canPublishData: true,
+    canPublish: isHost, 
+    canPublishData: isHost, 
     canSubscribe: true,
+    roomCreate: false, 
   });
 
   return at.toJwt();
@@ -83,4 +85,25 @@ export const handleRoomFinishedWebhook = async (roomName) => {
     where: { roomName, status: 'LIVE' },
     data: { status: 'ENDED', endedAt: new Date() },
   });
+};
+
+const roomService = new RoomServiceClient(
+  process.env.LIVEKIT_URL,
+  process.env.LIVEKIT_API_KEY,
+  process.env.LIVEKIT_API_SECRET
+);
+
+export const updateStudentHandStatus = async (roomName, identity, isRaised) => {
+  const metadata = JSON.stringify({ handRaised: isRaised });
+  return roomService.updateParticipant(roomName, identity, metadata);
+};
+
+export const grantMicPermission = async (roomName, identity) => {
+  await roomService.updateParticipant(roomName, identity, undefined, {
+    canPublish: true,
+    canSubscribe: true,
+    canPublishData: true,
+  });
+  
+  return roomService.updateParticipant(roomName, identity, JSON.stringify({ handRaised: false }));
 };

@@ -9,5 +9,7 @@ router.post('/start', verifyAuth, requireRole('ADMIN'), liveController.startLive
 router.post('/end', verifyAuth, requireRole('ADMIN'), liveController.endLive);
 router.get('/', verifyAuth, liveController.getLiveStatus);
 router.post('/token', verifyAuth, liveController.getToken);
+router.post('/raise-hand', verifyAuth, liveController.raiseHand);
+router.post('/approve-mic', verifyAuth, requireRole('ADMIN'), liveController.approveMic);
 
 export default router;

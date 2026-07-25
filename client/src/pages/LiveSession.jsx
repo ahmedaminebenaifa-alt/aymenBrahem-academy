@@ -32,13 +32,14 @@ const LiveSession = () => {
     fetchToken();
   }, []);
 
-  // Fires on ANY disconnect: button click, tab close, network drop — not just the leave button
   const handleDisconnected = useCallback(async () => {
+    // Note: Tab closures might interrupt this API call. 
+    // Your backend Webhook is the true safety net for this scenario.
     if (isAdmin) {
       try {
         await api.post('/live/end');
       } catch (err) {
-        console.error('Failed to end live session in DB:', err.response?.data || err.message);
+        console.error('Failed to end live session in DB:', err?.response?.data || err?.message);
       }
     }
     navigate('/');
@@ -52,7 +53,7 @@ const LiveSession = () => {
     );
   }
 
-  if (token === '') {
+  if (!token) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-900 text-white">
         جاري الاتصال بالبث المباشر...
@@ -66,15 +67,27 @@ const LiveSession = () => {
       audio={false}
       token={token}
       serverUrl={serverUrl}
+      connect={true}
+      // OPTIMIZATION: Network resilience for weak connections
+      options={{
+        adaptiveStream: true,
+        dynacast: true,
+        publishDefaults: { simulcast: true },
+      }}
       data-lk-theme="default"
       className="flex flex-col h-screen w-full bg-gray-900 text-white"
       onDisconnected={handleDisconnected}
     >
-      <div className="flex flex-1 overflow-hidden">
-        <div className="flex-1 p-4 flex items-center justify-center relative">
+      {/* RESPONSIVE LAYOUT: Column on mobile, Row on desktop */}
+      <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
+        
+        {/* Stage takes remaining space */}
+        <div className="flex-1 p-2 md:p-4 flex items-center justify-center relative min-h-[50vh] lg:min-h-0">
           <LiveStage />
         </div>
-        <div className="w-80 bg-gray-800 border-l border-gray-700">
+        
+        {/* Sidebar at bottom on mobile (35% height), right on desktop */}
+        <div className="w-full lg:w-80 h-1/3 lg:h-full bg-gray-800 border-t lg:border-t-0 lg:border-l border-gray-700">
           <AudioSidebar />
         </div>
       </div>

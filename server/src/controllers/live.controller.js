@@ -84,3 +84,29 @@ export const getToken = asyncHandler(async (req, res) => {
     roomName: session.roomName,
   });
 });
+
+export const raiseHand = asyncHandler(async (req, res) => {
+  const { isRaised } = req.body;
+  const session = await liveService.getActiveSession();
+  
+  if (!session) {
+    return res.status(404).json({ status: 'fail', message: 'لا يوجد بث مباشر حالياً' });
+  }
+
+  await liveService.updateStudentHandStatus(session.roomName, req.user.id, isRaised);
+  
+  res.status(200).json({ status: 'success' });
+});
+
+export const approveMic = asyncHandler(async (req, res) => {
+  const { identity } = req.body;
+  const session = await liveService.getActiveSession();
+  
+  if (!session) {
+    return res.status(404).json({ status: 'fail', message: 'لا يوجد بث مباشر حالياً' });
+  }
+
+  await liveService.grantMicPermission(session.roomName, identity);
+  
+  res.status(200).json({ status: 'success' });
+});
