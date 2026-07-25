@@ -1,76 +1,54 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../api/axios';
 
+const fetchProgress = async (courseId) => {
+  const { data } = await api.get(`/courses/${courseId}/progress`);
+  return new Set(data.data);
+};
+
 export function useCompletionTracking(courseId) {
-  const [completedIds, setCompletedIds] = useState(new Set());
-  const [isLoading, setIsLoading] = useState(true);
-  const [pendingIds, setPendingIds] = useState(new Set()); // in-flight toggles, to disable double-clicks
+  const queryClient = useQueryClient();
+  const queryKey = ['completion', courseId];
 
-  useEffect(() => {
-    if (!courseId) return;
-    let cancelled = false;
+  const { data: completedIds = new Set(), isLoading } = useQuery({
+    queryKey,
+    queryFn: () => fetchProgress(courseId),
+    enabled: !!courseId,
+  });
 
-    (async () => {
-      setIsLoading(true);
-      try {
-        const { data } = await api.get(`/courses/${courseId}/progress`);
-        if (!cancelled) setCompletedIds(new Set(data.data));
-      } catch {
-        if (!cancelled) setCompletedIds(new Set());
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
-    })();
+  const toggleMutation = useMutation({
+    mutationFn: ({ contentId, wasCompleted }) =>
+      wasCompleted ? api.delete(`/contents/${contentId}/progress`) : api.post(`/contents/${contentId}/progress`),
+    onMutate: async ({ contentId, wasCompleted }) => {
+      await queryClient.cancelQueries({ queryKey });
+      const previous = queryClient.getQueryData(queryKey) || new Set();
 
-    return () => {
-      cancelled = true;
-    };
-  }, [courseId]);
+      const next = new Set(previous);
+      wasCompleted ? next.delete(contentId) : next.add(contentId);
+      queryClient.setQueryData(queryKey, next);
 
-  const isCompleted = useCallback((contentId) => completedIds.has(contentId), [completedIds]);
-
-  const toggleComplete = useCallback(
-    async (contentId) => {
-      const wasCompleted = completedIds.has(contentId);
-
-      // Optimistic update
-      setCompletedIds((prev) => {
-        const next = new Set(prev);
-        wasCompleted ? next.delete(contentId) : next.add(contentId);
-        return next;
-      });
-      setPendingIds((prev) => new Set(prev).add(contentId));
-
-      try {
-        if (wasCompleted) {
-          await api.delete(`/contents/${contentId}/progress`);
-        } else {
-          await api.post(`/contents/${contentId}/progress`);
-        }
-      } catch {
-        // Roll back on failure
-        setCompletedIds((prev) => {
-          const next = new Set(prev);
-          wasCompleted ? next.add(contentId) : next.delete(contentId);
-          return next;
-        });
-      } finally {
-        setPendingIds((prev) => {
-          const next = new Set(prev);
-          next.delete(contentId);
-          return next;
-        });
-      }
+      return { previous };
     },
-    [completedIds]
-  );
+    onError: (err, _vars, context) => {
+      queryClient.setQueryData(queryKey, context.previous);
+    },
+  });
 
-  const isThemeCompleted = useCallback(
-    (theme) => theme.contents.length > 0 && theme.contents.every((c) => completedIds.has(c.id)),
-    [completedIds]
-  );
+  const isCompleted = (contentId) => completedIds.has(contentId);
 
-  const isPending = useCallback((contentId) => pendingIds.has(contentId), [pendingIds]);
+  const toggleComplete = (contentId) => {
+    const wasCompleted = completedIds.has(contentId);
+    toggleMutation.mutate({ contentId, wasCompleted });
+  };
+
+  const isThemeCompleted = (theme) =>
+    theme.contents.length > 0 && theme.contents.every((c) => completedIds.has(c.id));
+
+  // Was per-id via a Set of pending ids; TanStack Query's mutation state is
+  // one mutation object, not naturally per-id — track the currently in-flight
+  // contentId via mutation variables instead of a separate Set.
+  const isPending = (contentId) =>
+    toggleMutation.isPending && toggleMutation.variables?.contentId === contentId;
 
   return { isCompleted, toggleComplete, isThemeCompleted, isPending, isLoading };
 }

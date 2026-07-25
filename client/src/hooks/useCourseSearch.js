@@ -1,41 +1,26 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useDebounce } from './useDebounce';
 import api from '../api/axios';
+
+const fetchSearchResults = async (query) => {
+  const { data } = await api.get('/courses/search', { params: { q: query } });
+  return data.data;
+};
 
 export function useCourseSearch() {
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const debounceRef = useRef(null);
+  const debouncedQuery = useDebounce(query, 350);
+  const trimmed = debouncedQuery.trim();
 
-  useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
+  const { data: results = [], isFetching } = useQuery({
+    queryKey: ['courseSearch', trimmed],
+    queryFn: () => fetchSearchResults(trimmed),
+    enabled: trimmed.length >= 2,
+    staleTime: 30 * 1000, // repeating an earlier search within 30s won't re-hit the network
+  });
 
-    if (query.trim().length < 2) {
-      setResults([]);
-      setLoading(false);
-      return;
-    }
+  const clear = () => setQuery('');
 
-    setLoading(true);
-    debounceRef.current = setTimeout(async () => {
-      try {
-        const { data } = await api.get('/courses/search', { params: { q: query } });
-        setResults(data.data);
-      } catch (err) {
-        console.error('Course search failed:', err);
-        setResults([]);
-      } finally {
-        setLoading(false);
-      }
-    }, 350);
-
-    return () => clearTimeout(debounceRef.current);
-  }, [query]);
-
-  const clear = () => {
-    setQuery('');
-    setResults([]);
-  };
-
-  return { query, setQuery, results, loading, clear };
+  return { query, setQuery, results, loading: isFetching, clear };
 }

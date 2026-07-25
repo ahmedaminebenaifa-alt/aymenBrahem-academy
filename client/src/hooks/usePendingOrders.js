@@ -1,32 +1,39 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../api/axios';
 
+const fetchPendingOrders = async () => {
+  const { data } = await api.get('/orders/admin/pending');
+  return data.data;
+};
+
 export function usePendingOrders() {
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const queryKey = ['pendingOrders'];
 
-  const fetchOrders = useCallback(async () => {
-    try {
-      const { data } = await api.get('/orders/admin/pending');
-      setOrders(data.data);
-    } catch (err) {
-      console.error('Failed to fetch pending orders:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const { data: orders = [], isLoading } = useQuery({
+    queryKey,
+    queryFn: fetchPendingOrders,
+  });
 
-  useEffect(() => { fetchOrders(); }, [fetchOrders]);
-
-  const approve = async (orderId) => {
-    await api.post(`/orders/${orderId}/approve`);
-    setOrders((prev) => prev.filter((o) => o.id !== orderId));
+  const removeFromCache = (orderId) => {
+    queryClient.setQueryData(queryKey, (old = []) => old.filter((o) => o.id !== orderId));
   };
 
-  const reject = async (orderId) => {
-    await api.post(`/orders/${orderId}/reject`);
-    setOrders((prev) => prev.filter((o) => o.id !== orderId));
-  };
+  const approveMutation = useMutation({
+    mutationFn: (orderId) => api.post(`/orders/${orderId}/approve`),
+    onSuccess: (_data, orderId) => removeFromCache(orderId),
+  });
 
-  return { orders, loading, approve, reject, refetch: fetchOrders };
+  const rejectMutation = useMutation({
+    mutationFn: (orderId) => api.post(`/orders/${orderId}/reject`),
+    onSuccess: (_data, orderId) => removeFromCache(orderId),
+  });
+
+  return {
+    orders,
+    loading: isLoading,
+    approve: (orderId) => approveMutation.mutateAsync(orderId),
+    reject: (orderId) => rejectMutation.mutateAsync(orderId),
+    refetch: () => queryClient.invalidateQueries({ queryKey }),
+  };
 }

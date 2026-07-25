@@ -1,39 +1,39 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../api/axios';
 
+const fetchCatalog = async () => {
+  const { data } = await api.get('/courses/student/catalog');
+  return data;
+};
+
 export const useStudentCourses = () => {
-  const [courses, setCourses] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const queryClient = useQueryClient();
+  const queryKey = ['studentCatalog'];
   const [enrollingCourseId, setEnrollingCourseId] = useState(null);
 
-  const fetchCatalog = useCallback(async (signal) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const { data } = await api.get('/courses/student/catalog', { signal });
-      setCourses(data);
-    } catch (err) {
-      if (err.code === 'ERR_CANCELED') return;
-      setError(err.response?.data?.error || 'فشل في جلب قائمة الدورات');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const {
+    data: courses = [],
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey,
+    queryFn: fetchCatalog,
+  });
 
-  useEffect(() => {
-    const controller = new AbortController();
-    fetchCatalog(controller.signal);
-    return () => controller.abort();
-  }, [fetchCatalog]);
+  const enrollMutation = useMutation({
+    mutationFn: (courseId) => api.post('/enrollments', { courseId }),
+    onSuccess: (_data, courseId) => {
+      queryClient.setQueryData(queryKey, (old = []) =>
+        old.map((c) => (c.id === courseId ? { ...c, isEnrolled: true } : c))
+      );
+    },
+  });
 
   const enrollInCourse = async (courseId) => {
     setEnrollingCourseId(courseId);
     try {
-      await api.post('/enrollments', { courseId });
-      setCourses((prev) =>
-        prev.map((c) => (c.id === courseId ? { ...c, isEnrolled: true } : c))
-      );
+      await enrollMutation.mutateAsync(courseId);
       return { success: true, message: 'تم التسجيل بنجاح! يمكنك الآن بدء التعلم.' };
     } catch (err) {
       return { success: false, message: err.response?.data?.error || 'حدث خطأ أثناء التسجيل' };
@@ -45,9 +45,9 @@ export const useStudentCourses = () => {
   return {
     courses,
     isLoading,
-    error,
+    error: error ? (error.response?.data?.error || 'فشل في جلب قائمة الدورات') : null,
     enrollingCourseId,
     enrollInCourse,
-    refreshCatalog: () => fetchCatalog(),
+    refreshCatalog: () => queryClient.invalidateQueries({ queryKey }),
   };
 };

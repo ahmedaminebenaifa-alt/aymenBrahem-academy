@@ -1,24 +1,19 @@
 import { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../api/axios';
 
 export const useCreateCourse = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const queryClient = useQueryClient();
   const [progress, setProgress] = useState({ step: '', percentage: 0 });
 
-  const createCourse = async (courseData, mediaFiles) => {
-    setIsLoading(true);
-    setError(null);
-    setProgress({ step: 'جاري تحضير البيانات...', percentage: 10 });
-
-    try {
+  const mutation = useMutation({
+    mutationFn: async ({ courseData, mediaFiles }) => {
       let coverImageUrl = null;
 
       if (mediaFiles.thumbnail) {
         setProgress({ step: 'جاري رفع صورة الغلاف...', percentage: 20 });
         const imageFormData = new FormData();
         imageFormData.append('image', mediaFiles.thumbnail);
-
         const { data: imageData } = await api.post('/courses/upload-cover', imageFormData, {
           headers: { 'Content-Type': undefined },
         });
@@ -62,15 +57,24 @@ export const useCreateCourse = () => {
 
       setProgress({ step: 'تم النشر بنجاح!', percentage: 100 });
       return newCourse;
-    } catch (err) {
-      const message = err.response?.data?.error || err.response?.data?.message || 'حدث خطأ أثناء النشر';
-      setError(message);
+    },
+    onSuccess: () => {
+      // The admin course list should include this new course on next visit
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
+    },
+    onError: () => {
       setProgress({ step: 'حدث خطأ أثناء النشر', percentage: 0 });
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
+    },
+  });
+
+  const createCourse = (courseData, mediaFiles) => {
+    setProgress({ step: 'جاري تحضير البيانات...', percentage: 10 });
+    return mutation.mutateAsync({ courseData, mediaFiles });
   };
 
-  return { createCourse, isLoading, error, progress };
+  const errorMessage = mutation.error
+    ? mutation.error.response?.data?.error || mutation.error.response?.data?.message || 'حدث خطأ أثناء النشر'
+    : null;
+
+  return { createCourse, isLoading: mutation.isPending, error: errorMessage, progress };
 };

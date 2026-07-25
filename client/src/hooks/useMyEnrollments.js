@@ -1,34 +1,25 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useMemo } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../api/axios';
 
+const fetchEnrollments = async () => {
+  const { data } = await api.get('/enrollments/me');
+  return data.data;
+};
+
 export const useMyEnrollments = () => {
-  const [courses, setCourses] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const queryClient = useQueryClient();
   const [activeFilter, setActiveFilter] = useState('all');
   const [sortOption, setSortOption] = useState('newest');
 
-  const fetchEnrollments = useCallback(async (signal) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const { data } = await api.get('/enrollments/me', { signal });
-      // Backend already returns fully-flattened course objects with
-      // lessonsCount, completedLessons, resourcesCount, and enrolledAt included.
-      setCourses(data.data);
-    } catch (err) {
-      if (err.code === 'ERR_CANCELED') return;
-      setError(err.response?.data?.error || 'فشل في جلب دوراتك المسجلة');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    fetchEnrollments(controller.signal);
-    return () => controller.abort();
-  }, [fetchEnrollments]);
+  const {
+    data: courses = [],
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ['myEnrollments'],
+    queryFn: fetchEnrollments,
+  });
 
   const visibleCourses = useMemo(() => {
     let list = [...courses];
@@ -47,11 +38,11 @@ export const useMyEnrollments = () => {
     courses: visibleCourses,
     totalCount: courses.length,
     isLoading,
-    error,
+    error: error ? (error.response?.data?.error || 'فشل في جلب دوراتك المسجلة') : null,
     activeFilter,
     setActiveFilter,
     sortOption,
     setSortOption,
-    refresh: () => fetchEnrollments(),
+    refresh: () => queryClient.invalidateQueries({ queryKey: ['myEnrollments'] }),
   };
 };

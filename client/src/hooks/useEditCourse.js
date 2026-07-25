@@ -1,64 +1,57 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 import api from '../api/axios';
 
+const fetchCourse = async (courseId) => {
+  const { data } = await api.get(`/courses/${courseId}`);
+  return {
+    title: data.title || '',
+    description: data.description || '',
+    category: data.category || '',
+    price: data.price ? String(data.price) : '',
+    coverImage: data.coverImage || null,
+    subCourses: data.subCourses || [],
+    files: data.files || [],
+  };
+};
+
 export const useEditCourse = (courseId) => {
-  const [courseData, setCourseData] = useState(null);
-  const [existingFiles, setExistingFiles] = useState([]);
-  const [isFetching, setIsFetching] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState(null);
+  const queryClient = useQueryClient();
+  const queryKey = ['course', courseId];
   const [progress, setProgress] = useState({ step: '', percentage: 0 });
 
-  const fetchCourse = useCallback(async () => {
-    setIsFetching(true);
-    try {
-      const { data: course } = await api.get(`/courses/${courseId}`);
-      setCourseData({
-        title: course.title || '',
-        description: course.description || '',
-        category: course.category || '',
-        price: course.price ? String(course.price) : '',
-        coverImage: course.coverImage || null,
-        contentType: course.contentType || 'PDF_ONLY',
-        subCourses: course.subCourses || [],
-      });
-      setExistingFiles(course.files || []);
-    } catch (err) {
-      setError(err.response?.data?.error || 'فشل في جلب بيانات الدرس');
-    } finally {
-      setIsFetching(false);
-    }
-  }, [courseId]);
+  const { data: courseData, isLoading: isFetching, error: fetchError } = useQuery({
+    queryKey,
+    queryFn: () => fetchCourse(courseId),
+    enabled: !!courseId,
+  });
 
-  useEffect(() => {
-    if (courseId) fetchCourse();
-  }, [courseId, fetchCourse]);
+  const existingFiles = courseData?.files || [];
 
-  const deleteExistingFile = async (fileId) => {
-    const previous = existingFiles;
-    setExistingFiles((prev) => prev.filter((f) => f.id !== fileId));
+  const deleteFileMutation = useMutation({
+    mutationFn: (fileId) => api.delete(`/courses/${courseId}/files/${fileId}`),
+    onMutate: async (fileId) => {
+      await queryClient.cancelQueries({ queryKey });
+      const previous = queryClient.getQueryData(queryKey);
+      queryClient.setQueryData(queryKey, (old) => ({
+        ...old,
+        files: old.files.filter((f) => f.id !== fileId),
+      }));
+      return { previous };
+    },
+    onError: (err, _fileId, context) => {
+      queryClient.setQueryData(queryKey, context.previous);
+    },
+  });
 
-    try {
-      await api.delete(`/courses/${courseId}/files/${fileId}`);
-    } catch (err) {
-      setExistingFiles(previous);
-      setError(err.response?.data?.error || 'فشل في حذف الملف');
-    }
-  };
-
-  const updateCourse = async (updatedData, newThumbnail, newPdfs = []) => {
-    setIsSaving(true);
-    setError(null);
-    setProgress({ step: 'جاري التحضير...', percentage: 10 });
-
-    try {
+  const updateMutation = useMutation({
+    mutationFn: async ({ updatedData, newThumbnail, newPdfs }) => {
       let coverImageUrl;
 
       if (newThumbnail) {
         setProgress({ step: 'جاري رفع صورة الغلاف الجديدة...', percentage: 25 });
         const imageFormData = new FormData();
         imageFormData.append('image', newThumbnail);
-
         const { data: imageData } = await api.post('/courses/upload-cover', imageFormData, {
           headers: { 'Content-Type': undefined },
         });
@@ -72,7 +65,6 @@ export const useEditCourse = (courseId) => {
         title: updatedData.title.trim(),
         description: updatedData.description.trim(),
         category: updatedData.category,
-        contentType: updatedData.contentType,
         price: isFree ? null : parseFloat(updatedData.price),
         isFree,
         ...(coverImageUrl && { coverImage: coverImageUrl }),
@@ -100,15 +92,36 @@ export const useEditCourse = (courseId) => {
 
       setProgress({ step: 'تم الحفظ بنجاح!', percentage: 100 });
       return updated;
-    } catch (err) {
-      const message = err.response?.data?.error || err.response?.data?.message || 'فشل في حفظ التعديلات';
-      setError(message);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey });
+    },
+    onError: () => {
       setProgress({ step: 'حدث خطأ أثناء الحفظ', percentage: 0 });
-      throw err;
-    } finally {
-      setIsSaving(false);
-    }
+    },
+  });
+
+  const updateCourse = (updatedData, newThumbnail, newPdfs = []) => {
+    setProgress({ step: 'جاري التحضير...', percentage: 10 });
+    return updateMutation.mutateAsync({ updatedData, newThumbnail, newPdfs });
   };
 
-  return { courseData, existingFiles, isFetching, isSaving, error, progress, deleteExistingFile, updateCourse };
+  const errorMessage =
+    (fetchError && (fetchError.response?.data?.error || 'فشل في جلب بيانات الدرس')) ||
+    (updateMutation.error &&
+      (updateMutation.error.response?.data?.error ||
+        updateMutation.error.response?.data?.message ||
+        'فشل في حفظ التعديلات')) ||
+    null;
+
+  return {
+    courseData,
+    existingFiles,
+    isFetching,
+    isSaving: updateMutation.isPending,
+    error: errorMessage,
+    progress,
+    deleteExistingFile: (fileId) => deleteFileMutation.mutateAsync(fileId),
+    updateCourse,
+  };
 };
