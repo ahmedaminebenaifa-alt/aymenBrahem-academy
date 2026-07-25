@@ -54,6 +54,8 @@ model Course {
   liveSessions LiveSession[]
   orders          Order[]
   subCourses  SubCourse[]
+
+  @@index([category, published])
 }
 
 enum CourseCategory {
@@ -118,6 +120,8 @@ model LiveSession {
   updatedAt    DateTime          @updatedAt
 
   @@index([status])
+  @@index([hostId])
+  @@index([courseId])
 }
 
 enum NotificationType {
@@ -189,6 +193,7 @@ model Order {
 
   @@index([status])
   @@index([userId])
+  @@index([courseId])
 }
 
 
@@ -242,7 +247,6 @@ model ContentProgress {
   completedAt    DateTime     @default(now())
 
   @@unique([userId, contentBlockId])
-  @@index([userId])
   @@index([contentBlockId])
 }
 
