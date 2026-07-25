@@ -12,20 +12,27 @@ const ICONS = {
 };
 
 const timeAgo = (dateString) => {
-  const diffMs = Date.now() - new Date(dateString).getTime();
-  const diffMin = Math.floor(diffMs / 60000);
-  if (diffMin < 1) return 'الآن';
-  if (diffMin < 60) return `منذ ${diffMin} دقيقة`;
-  const diffHours = Math.floor(diffMin / 60);
-  if (diffHours < 24) return `منذ ${diffHours} ساعة`;
-  return `منذ ${Math.floor(diffHours / 24)} يوم`;
+  const date = new Date(dateString);
+  return date.toLocaleString('ar-EG-u-nu-latn', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 };
 
 const formatScheduled = (dateString) => {
   const date = new Date(dateString);
   const isFuture = date.getTime() > Date.now();
   const formatted = date.toLocaleString('ar-EG-u-nu-latn', {
-    weekday: 'long', hour: '2-digit', minute: '2-digit',
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
   });
   return isFuture ? `الموعد: ${formatted}` : `كان في: ${formatted}`;
 };
