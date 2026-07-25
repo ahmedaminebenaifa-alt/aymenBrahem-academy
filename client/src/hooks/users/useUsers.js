@@ -1,48 +1,46 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useMemo } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../api/axios';
 
+const fetchUsers = async () => {
+  const { data } = await api.get('/users');
+  return data;
+};
+
 export const useUsers = () => {
-  const [users, setUsers] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const queryClient = useQueryClient();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [activeRoleFilter, setActiveRoleFilter] = useState('الكل');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  const fetchUsers = useCallback(async (signal) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const { data } = await api.get('/users', { signal });
-      setUsers(data);
-    } catch (err) {
-      if (err.code === 'ERR_CANCELED') return;
-      setError(err.response?.data?.message || 'فشل في جلب بيانات المستخدمين');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const {
+    data: users = [],
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ['users'],
+    queryFn: fetchUsers,
+  });
 
-  useEffect(() => {
-    const controller = new AbortController();
-    fetchUsers(controller.signal);
-    return () => controller.abort();
-  }, [fetchUsers]);
-
-  const deleteUser = async (userId) => {
-    if (!window.confirm('حذف هذا المستخدم سيمسح جميع بياناته نهائياً. هل أنت متأكد؟')) return;
-
-    const previousUsers = [...users];
-    setUsers(users.filter((user) => user.id !== userId));
-
-    try {
-      await api.delete(`/users/${userId}`);
-    } catch (err) {
+  const deleteMutation = useMutation({
+    mutationFn: (userId) => api.delete(`/users/${userId}`),
+    onMutate: async (userId) => {
+      await queryClient.cancelQueries({ queryKey: ['users'] });
+      const previous = queryClient.getQueryData(['users']);
+      queryClient.setQueryData(['users'], (old = []) => old.filter((u) => u.id !== userId));
+      return { previous };
+    },
+    onError: (err, _userId, context) => {
       alert('تعذر حذف المستخدم حالياً. تم التراجع عن الإجراء.');
-      setUsers(previousUsers);
-    }
+      queryClient.setQueryData(['users'], context.previous);
+    },
+  });
+
+  const deleteUser = (userId) => {
+    if (!window.confirm('حذف هذا المستخدم سيمسح جميع بياناته نهائياً. هل أنت متأكد؟')) return;
+    deleteMutation.mutate(userId);
   };
 
   const stats = useMemo(() => {
@@ -64,31 +62,44 @@ export const useUsers = () => {
     });
   }, [users, activeRoleFilter, searchQuery]);
 
+  // Reset to page 1 when filters change — derived directly instead of a
+  // separate useEffect, since currentPage can just be clamped on read
+  const safePage = useMemo(() => {
+    const maxPage = Math.max(Math.ceil(filteredUsers.length / itemsPerPage), 1);
+    return Math.min(currentPage, maxPage);
+  }, [currentPage, filteredUsers.length]);
+
   const paginatedUsers = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
+    const startIndex = (safePage - 1) * itemsPerPage;
     return filteredUsers.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredUsers, currentPage]);
+  }, [filteredUsers, safePage]);
 
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
 
-  useEffect(() => {
+  const setSearchQueryAndResetPage = (value) => {
+    setSearchQuery(value);
     setCurrentPage(1);
-  }, [searchQuery, activeRoleFilter]);
+  };
+
+  const setActiveRoleFilterAndResetPage = (value) => {
+    setActiveRoleFilter(value);
+    setCurrentPage(1);
+  };
 
   return {
     users: paginatedUsers,
     totalFiltered: filteredUsers.length,
     isLoading,
-    error,
+    error: error ? (error.response?.data?.message || 'فشل في جلب بيانات المستخدمين') : null,
     searchQuery,
-    setSearchQuery,
+    setSearchQuery: setSearchQueryAndResetPage,
     activeRoleFilter,
-    setActiveRoleFilter,
-    currentPage,
+    setActiveRoleFilter: setActiveRoleFilterAndResetPage,
+    currentPage: safePage,
     setCurrentPage,
     totalPages,
     stats,
     deleteUser,
-    refreshUsers: fetchUsers,
+    refreshUsers: () => queryClient.invalidateQueries({ queryKey: ['users'] }),
   };
 };
