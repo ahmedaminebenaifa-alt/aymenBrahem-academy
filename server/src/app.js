@@ -62,18 +62,34 @@ app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
 
 // ============================================================
-// 3. Rate Limiter (Applied globally to all /api endpoints)
+// 3. Rate Limiters (Multi-tier security)
 // ============================================================
-const limiter = rateLimit({
+const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 دقيقة
-  max: 10000,
+  max: 1000,
   message: { 
     error: 'Too many requests from this IP address. Please try again after 15 minutes.' 
   },
   standardHeaders: true, 
   legacyHeaders: false,  
 });
-app.use('/api', limiter);
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 دقيقة
+  max: 15, // 15 attempts allowed per 15 minutes
+  message: { 
+    error: 'Too many login attempts. Please try again after 15 minutes.' 
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Apply the strict limiter specifically to authentication routes
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
+
+// Apply the general limiter to all other /api endpoints
+app.use('/api', generalLimiter);
 
 // ============================================================
 // 4. Health Check
