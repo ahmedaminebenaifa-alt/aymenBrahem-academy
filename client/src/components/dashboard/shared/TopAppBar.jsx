@@ -19,7 +19,9 @@ const MATCH_LABELS = {
   content: 'في محتوى الدرس',
 };
 
+// ... (Keep your exact SearchInput component here, no changes needed) ...
 function SearchInput({ query, setQuery, isSearchOpen, setIsSearchOpen, clear, results, loading, isAdmin, onResultClick, placeholder, inputRef, showShortcutHint = false }) {
+  // ... (Your exact SearchInput code) ...
   return (
     <>
       <div className="relative flex items-center w-full group">
@@ -214,7 +216,7 @@ export default function TopAppBar() {
         }
       `}</style>
       <header
-        className={`z-40 bg-[var(--surface)]/85 backdrop-blur-xl border-b border-[var(--outline-variant)]/20 w-full sticky top-0 transition-transform duration-[500ms] ease-[cubic-bezier(0.23,1,0.32,1)] shadow-sm ${
+        className={`z-[110] bg-[var(--surface)]/85 backdrop-blur-xl border-b border-[var(--outline-variant)]/20 w-full fixed top-0 transition-transform duration-[500ms] ease-[cubic-bezier(0.23,1,0.32,1)] shadow-sm ${
           isHidden ? '-translate-y-full' : 'translate-y-0'
         }`}
       >
@@ -310,7 +312,20 @@ export default function TopAppBar() {
             />
           </div>
 
-          <div className="shrink-0 flex items-center justify-end">
+          {/* --- The New Header Logo + Toggle --- */}
+          <div className="shrink-0 flex items-center gap-4 justify-end">
+            <div className="flex items-center gap-3 hidden sm:flex">
+              <div className="text-right">
+                <h2 className="font-display font-bold text-base text-[var(--on-surface)] leading-tight">أكاديمية أيمن ابراهيم</h2>
+                <span className="text-[10px] tracking-wider text-[var(--primary)] uppercase font-extrabold block mt-0.5">
+                  {isAdmin ? 'Admin Portal' : 'Student Portal'}
+                </span>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--primary)] to-[var(--primary)]/80 flex items-center justify-center text-[var(--surface)] shadow-md shadow-[var(--primary)]/20">
+                <span className="material-symbols-outlined text-xl">school</span>
+              </div>
+            </div>
+
             <button 
               onClick={toggle} 
               aria-label="القائمة الجانبية"
@@ -318,7 +333,7 @@ export default function TopAppBar() {
             >
               <span className="absolute inset-0 rounded-full bg-[var(--primary)]/10 opacity-0 scale-75 group-hover:opacity-100 group-hover:scale-100 group-active:scale-90 transition-all duration-[400ms] ease-[cubic-bezier(0.16,1,0.3,1)]" />
               <span className="absolute inset-0 rounded-full border border-[var(--primary)]/30 opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 transition-all duration-[500ms] ease-[cubic-bezier(0.16,1,0.3,1)]" />
-              <span className="material-symbols-outlined text-[26px] relative z-10 transition-transform duration-[500ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:rotate-90 group-hover:scale-105 group-active:scale-90">
+              <span className="material-symbols-outlined text-[26px] relative z-10 transition-transform duration-[500ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105 group-active:scale-90">
                 menu
               </span>
             </button>
