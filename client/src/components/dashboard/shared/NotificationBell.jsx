@@ -86,7 +86,7 @@ export default function NotificationBell({ onToggle }) {
         </button>
 
         {isOpen && (
-          <div className="absolute right-0 sm:-right-2 mt-3 w-[340px] max-w-[calc(100vw-2rem)] bg-[var(--surface)]/95 backdrop-blur-xl border border-[var(--outline-variant)]/20 rounded-2xl shadow-[0_12px_40px_-12px_rgba(0,0,0,0.15)] overflow-hidden z-[60] origin-top-right animate-slide-down flex flex-col">
+          <div className="absolute left-1/2 -translate-x-1/2 sm:left-auto sm:translate-x-0 sm:right-0 mt-3 w-[calc(100vw-2rem)] max-w-[340px] bg-[var(--surface)]/95 backdrop-blur-xl border border-[var(--outline-variant)]/20 rounded-2xl shadow-[0_12px_40px_-12px_rgba(0,0,0,0.15)] overflow-hidden z-[60] origin-top animate-slide-down flex flex-col">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[var(--primary)] to-transparent opacity-60"></div>
             
             <div className="px-5 py-4 border-b border-[var(--outline-variant)]/10 flex justify-between items-center bg-[var(--surface-container-lowest)]/50">

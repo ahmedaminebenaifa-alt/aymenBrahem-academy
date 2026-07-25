@@ -137,6 +137,8 @@ model Notification {
   expiresAt    DateTime?
   scheduledFor DateTime?
   reads     NotificationRead[]
+  @@index([expiresAt])
+  @@index([scheduledFor])
 }
 
 model NotificationRead {

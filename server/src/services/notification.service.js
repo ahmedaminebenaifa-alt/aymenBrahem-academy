@@ -1,12 +1,22 @@
 import prisma from '../config/db.js';
 
+
 const GRACE_PERIOD_MS = 24 * 60 * 60 * 1000;
+
+// Single source of truth for "is this notification currently visible."
+// Used by both the student bell and the admin upcoming-announcements panel,
+// so there's exactly one place that defines visibility rules, not two
+// slightly-different queries that can drift apart.
+const visibilityWhere = (now = new Date()) => ({
+  AND: [
+    { OR: [{ expiresAt: null }, { expiresAt: { gte: now } }] },
+    { OR: [{ scheduledFor: null }, { scheduledFor: { lte: now } }] },
+  ],
+});
 
 export const getNotificationsForUser = async (userId, limit = 20) => {
   const notifications = await prisma.notification.findMany({
-    where: {
-      OR: [{ expiresAt: null }, { expiresAt: { gte: new Date() } }],
-    },
+    where: visibilityWhere(),
     orderBy: { createdAt: 'desc' },
     take: limit,
     include: {
@@ -35,15 +45,8 @@ export const markAsRead = async (notificationId, userId) => {
 };
 
 export const markAllAsRead = async (userId) => {
-  const now = new Date();
-
   const notifications = await prisma.notification.findMany({
-    where: {
-      AND: [
-        { OR: [{ expiresAt: null }, { expiresAt: { gte: now } }] },
-        { OR: [{ scheduledFor: null }, { scheduledFor: { lte: now } }] },
-      ],
-    },
+    where: visibilityWhere(),
     select: { id: true },
   });
 
@@ -74,6 +77,9 @@ export const createAnnouncement = ({ type, title, message, scheduledFor, link })
   });
 };
 
+// Admin's "upcoming" panel: notifications whose EVENT hasn't happened yet
+// (scheduledFor still in the future) — intentionally different concept from
+// student visibility (which is about the display window, not the event date).
 export const getUpcomingAnnouncements = (limit = 10) => {
   return prisma.notification.findMany({
     where: {
