@@ -1,20 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../../../api/axios';
 
 const TYPE_META = {
-  ANNOUNCEMENT_LIVE: { icon: 'podcasts', label: 'بث مباشر', color: 'text-red-600' },
+  ANNOUNCEMENT_LIVE: { icon: 'podcasts', label: 'بث مباشر', color: 'text-error' },
   ANNOUNCEMENT_COURSE: { icon: 'auto_stories', label: 'دورة جديدة', color: 'text-primary' },
   ANNOUNCEMENT_GENERAL: { icon: 'campaign', label: 'إعلان', color: 'text-tertiary' },
 };
 
 function formatDateTime(dateStr) {
   return new Date(dateStr).toLocaleString('ar-EG-u-nu-latn', {
-    weekday: 'long', hour: '2-digit', minute: '2-digit',
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit',
   });
 }
 
-// Convert an ISO date string to the format <input type="datetime-local"> expects
 function toDatetimeLocalValue(dateStr) {
   if (!dateStr) return '';
   const d = new Date(dateStr);
@@ -24,30 +24,49 @@ function toDatetimeLocalValue(dateStr) {
 
 const emptyForm = { type: 'ANNOUNCEMENT_LIVE', title: '', message: '', scheduledFor: '' };
 
+const fetchAnnouncements = async () => {
+  const { data } = await api.get('/notifications/announcements/upcoming');
+  return data.data;
+};
+
 const UpcomingSessions = () => {
-  const [announcements, setAnnouncements] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const queryKey = ['upcomingAnnouncements'];
+
+  const { data: announcements = [], isLoading: loading } = useQuery({
+    queryKey,
+    queryFn: fetchAnnouncements,
+  });
+
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [form, setForm] = useState(emptyForm);
+  const deletingIdRef = useRef(null);
   const [deletingId, setDeletingId] = useState(null);
 
-  const [editingId, setEditingId] = useState(null); // null = create mode, id = edit mode
-  const [form, setForm] = useState(emptyForm);
+  const invalidate = () => queryClient.invalidateQueries({ queryKey });
 
-  const fetchAnnouncements = async () => {
-    try {
-      const { data } = await api.get('/notifications/announcements/upcoming');
-      setAnnouncements(data.data);
-    } catch (err) {
-      console.error('Failed to fetch announcements:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const saveMutation = useMutation({
+    mutationFn: ({ id, payload }) =>
+      id ? api.patch(`/notifications/announcements/${id}`, payload) : api.post('/notifications/announcements', payload),
+    onSuccess: invalidate,
+  });
 
-  useEffect(() => {
-    fetchAnnouncements();
-  }, []);
+  const deleteMutation = useMutation({
+    mutationFn: (id) => api.delete(`/notifications/announcements/${id}`),
+    onMutate: async (id) => {
+      setDeletingId(id);
+      await queryClient.cancelQueries({ queryKey });
+      const previous = queryClient.getQueryData(queryKey);
+      queryClient.setQueryData(queryKey, (old = []) => old.filter((a) => a.id !== id));
+      return { previous };
+    },
+    onError: (err, id, context) => {
+      alert(err.response?.data?.message || 'فشل حذف الإعلان');
+      queryClient.setQueryData(queryKey, context.previous);
+    },
+    onSettled: () => setDeletingId(null),
+  });
 
   const openCreateModal = () => {
     setEditingId(null);
@@ -75,37 +94,21 @@ const UpcomingSessions = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.title || !form.scheduledFor) return;
-    setSaving(true);
     try {
-      if (editingId) {
-        await api.patch(`/notifications/announcements/${editingId}`, form);
-      } else {
-        await api.post('/notifications/announcements', form);
-      }
-      await fetchAnnouncements();
+      await saveMutation.mutateAsync({ id: editingId, payload: form });
       closeModal();
     } catch (err) {
       alert(err.response?.data?.message || 'فشل حفظ الإعلان');
-    } finally {
-      setSaving(false);
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = (id) => {
     if (!window.confirm('هل أنت متأكد من حذف هذا الإعلان؟')) return;
-    setDeletingId(id);
-    try {
-      await api.delete(`/notifications/announcements/${id}`);
-      setAnnouncements((prev) => prev.filter((a) => a.id !== id));
-    } catch (err) {
-      alert(err.response?.data?.message || 'فشل حذف الإعلان');
-    } finally {
-      setDeletingId(null);
-    }
+    deleteMutation.mutate(id);
   };
 
   return (
-    <div className="bg-white/70 backdrop-blur-md rounded-xl p-6 shadow-sm border border-outline-variant/30 relative">
+    <div className="bg-surface-container-lowest/70 backdrop-blur-md rounded-xl p-6 shadow-sm border border-outline-variant/30 relative">
       <h3 className="font-arabic font-bold text-lg text-on-surface mb-4 flex items-center gap-2">
         <span className="material-symbols-outlined text-tertiary-container">campaign</span>
         الإعلانات القادمة
@@ -151,7 +154,7 @@ const UpcomingSessions = () => {
                   <button
                     onClick={() => handleDelete(a.id)}
                     disabled={deletingId === a.id}
-                    className="text-on-surface-variant hover:text-red-600 p-1.5 rounded-md hover:bg-red-50 transition-colors disabled:opacity-50"
+                    className="text-on-surface-variant hover:text-error p-1.5 rounded-md hover:bg-error-container/20 transition-colors disabled:opacity-50"
                     title="حذف"
                   >
                     <span className="material-symbols-outlined text-lg">
@@ -239,10 +242,10 @@ const UpcomingSessions = () => {
               <div className="pt-2 flex gap-3 justify-start">
                 <button
                   type="submit"
-                  disabled={saving}
+                  disabled={saveMutation.isPending}
                   className="bg-primary text-on-primary font-bold text-sm px-5 py-2.5 rounded-lg hover:bg-primary-container transition-all disabled:opacity-60"
                 >
-                  {saving ? 'جاري الحفظ...' : editingId ? 'حفظ التعديلات' : 'نشر الإعلان'}
+                  {saveMutation.isPending ? 'جاري الحفظ...' : editingId ? 'حفظ التعديلات' : 'نشر الإعلان'}
                 </button>
                 <button
                   type="button"

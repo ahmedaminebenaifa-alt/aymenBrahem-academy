@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useProfileSettings } from '../../../hooks/useProfileSettings';
+// IMPORT THE SIDEBAR HOOK
+import { useSidebar } from '../../../context/SidebarContext'; 
 
 export default function AdminSettings() {
   const {
@@ -13,6 +15,9 @@ export default function AdminSettings() {
     profileSuccess,
     passwordSuccess,
   } = useProfileSettings();
+
+  // Fetch the sidebar state
+  const { isOpen } = useSidebar(); 
 
   const [profileForm, setProfileForm] = useState({ name: '', email: '' });
   const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
@@ -42,109 +47,169 @@ export default function AdminSettings() {
   };
 
   return (
-    <div className="max-w-3xl space-y-8">
-      <div>
-        <h2 className="font-arabic font-bold text-2xl text-primary mb-1">الإعدادات</h2>
-        <p className="text-on-surface-variant text-sm">إدارة معلومات حساب المدير وكلمة المرور</p>
+    <div className={`max-w-4xl mx-auto space-y-8 p-4 md:py-8 md:pl-8 transition-[padding] duration-500 ease-[cubic-bezier(0.2,1,0.2,1)] ${
+      isOpen ? 'md:pr-[300px]' : 'md:pr-[120px]'
+    }`}>
+      
+      {/* Header Section */}
+      <div className="flex flex-col gap-2">
+        <h2 className="font-display font-bold text-3xl text-primary tracking-tight">الإعدادات</h2>
+        <p className="text-on-surface-variant text-base">إدارة معلومات حساب المدير، تفاصيل ملفك الشخصي، وإعدادات الأمان.</p>
       </div>
 
-      <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-[4px] shadow-sm overflow-hidden border-t-2 border-t-tertiary">
-        <div className="flex items-center gap-3 px-6 py-5 bg-surface-container-low/40 border-b border-outline-variant/20">
-          <div className="w-1 h-5 bg-tertiary rounded-full" />
-          <h3 className="font-arabic font-bold text-lg text-primary">البيانات الشخصية</h3>
+      {/* Profile Info Form */}
+      <div className="bg-surface-container-lowest border border-outline-variant/40 rounded-2xl shadow-sm overflow-hidden">
+        <div className="flex items-center gap-3 px-6 py-5 border-b border-outline-variant/30 bg-surface-container-lowest">
+          <span className="material-symbols-outlined text-primary text-xl">manage_accounts</span>
+          <h3 className="font-display font-bold text-lg text-on-surface">البيانات الشخصية</h3>
         </div>
 
-        <form onSubmit={handleProfileSubmit} className="p-6 space-y-5">
-          <div>
-            <label className="block text-sm font-bold text-on-surface mb-2">الاسم الكامل</label>
-            <input
-              type="text"
-              value={profileForm.name}
-              onChange={(e) => setProfileForm((p) => ({ ...p, name: e.target.value }))}
-              className="w-full bg-surface-container-low/60 border border-outline-variant/30 rounded-[4px] px-4 py-3 text-sm text-on-surface focus:outline-none focus:border-tertiary focus:ring-1 focus:ring-tertiary transition-all"
-            />
+        <form onSubmit={handleProfileSubmit} className="p-6 md:p-8 space-y-6 bg-surface-container-lowest/50">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-on-surface-variant">الاسم الكامل</label>
+              <input
+                type="text"
+                value={profileForm.name}
+                onChange={(e) => setProfileForm((p) => ({ ...p, name: e.target.value }))}
+                className="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-xl px-4 py-3 text-sm text-on-surface focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all hover:border-outline-variant"
+                placeholder="أدخل اسمك الكامل"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-on-surface-variant">البريد الإلكتروني</label>
+              <input
+                type="email"
+                value={profileForm.email}
+                onChange={(e) => setProfileForm((p) => ({ ...p, email: e.target.value }))}
+                className="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-xl px-4 py-3 text-sm text-on-surface focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all hover:border-outline-variant"
+                placeholder="example@domain.com"
+                dir="ltr"
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-bold text-on-surface mb-2">البريد الإلكتروني</label>
-            <input
-              type="email"
-              value={profileForm.email}
-              onChange={(e) => setProfileForm((p) => ({ ...p, email: e.target.value }))}
-              className="w-full bg-surface-container-low/60 border border-outline-variant/30 rounded-[4px] px-4 py-3 text-sm text-on-surface focus:outline-none focus:border-tertiary focus:ring-1 focus:ring-tertiary transition-all"
-            />
-          </div>
+          {/* Feedback Messages */}
+          {profileError && (
+            <div className="flex items-center gap-2 p-4 bg-error/10 text-error rounded-xl border border-error/20">
+              <span className="material-symbols-outlined text-lg">error</span>
+              <p className="text-sm font-medium">{profileError}</p>
+            </div>
+          )}
+          {profileSuccess && (
+            <div className="flex items-center gap-2 p-4 bg-[#a4ceb5]/20 text-[#02422a] rounded-xl border border-[#a4ceb5]/40">
+              <span className="material-symbols-outlined text-lg">check_circle</span>
+              <p className="text-sm font-medium">تم حفظ التغييرات بنجاح</p>
+            </div>
+          )}
 
-          {profileError && <p className="text-sm text-error font-bold">{profileError}</p>}
-          {profileSuccess && <p className="text-sm text-primary font-bold">تم حفظ التغييرات بنجاح</p>}
-
-          <div className="flex justify-end pt-2">
+          <div className="flex justify-end pt-4 border-t border-outline-variant/20">
             <button
               type="submit"
               disabled={isSavingProfile}
-              className="px-8 py-2.5 bg-primary text-on-primary rounded-[4px] font-bold text-sm hover:opacity-90 transition-all disabled:opacity-50 flex items-center gap-2"
+              className="px-8 py-3 bg-primary text-on-primary rounded-xl font-bold text-sm shadow-sm hover:shadow-md hover:bg-primary/90 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-w-[160px]"
             >
-              {isSavingProfile && <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>}
-              حفظ التغييرات
+              {isSavingProfile ? (
+                <>
+                  <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
+                  جاري الحفظ...
+                </>
+              ) : (
+                <>
+                  <span className="material-symbols-outlined text-[18px]">save</span>
+                  حفظ التغييرات
+                </>
+              )}
             </button>
           </div>
         </form>
       </div>
 
-      <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-[4px] shadow-sm overflow-hidden border-t-2 border-t-tertiary">
-        <div className="flex items-center gap-3 px-6 py-5 bg-surface-container-low/40 border-b border-outline-variant/20">
-          <div className="w-1 h-5 bg-tertiary rounded-full" />
-          <h3 className="font-arabic font-bold text-lg text-primary">تغيير كلمة المرور</h3>
+      {/* Security / Password Form */}
+      <div className="bg-surface-container-lowest border border-outline-variant/40 rounded-2xl shadow-sm overflow-hidden mb-8">
+        <div className="flex items-center gap-3 px-6 py-5 border-b border-outline-variant/30 bg-surface-container-lowest">
+          <span className="material-symbols-outlined text-primary text-xl">lock</span>
+          <h3 className="font-display font-bold text-lg text-on-surface">الأمان وكلمة المرور</h3>
         </div>
 
-        <form onSubmit={handlePasswordSubmit} className="p-6 space-y-5">
-          <div>
-            <label className="block text-sm font-bold text-on-surface mb-2">كلمة المرور الحالية</label>
+        <form onSubmit={handlePasswordSubmit} className="p-6 md:p-8 space-y-6 bg-surface-container-lowest/50">
+          <div className="space-y-2 max-w-md">
+            <label className="block text-sm font-semibold text-on-surface-variant">كلمة المرور الحالية</label>
             <input
               type="password"
               value={passwordForm.currentPassword}
               onChange={(e) => setPasswordForm((p) => ({ ...p, currentPassword: e.target.value }))}
-              className="w-full bg-surface-container-low/60 border border-outline-variant/30 rounded-[4px] px-4 py-3 text-sm text-on-surface focus:outline-none focus:border-tertiary focus:ring-1 focus:ring-tertiary transition-all"
+              className="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-xl px-4 py-3 text-sm text-on-surface focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all hover:border-outline-variant"
+              placeholder="••••••••"
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div>
-              <label className="block text-sm font-bold text-on-surface mb-2">كلمة المرور الجديدة</label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-on-surface-variant">كلمة المرور الجديدة</label>
               <input
                 type="password"
                 value={passwordForm.newPassword}
                 onChange={(e) => setPasswordForm((p) => ({ ...p, newPassword: e.target.value }))}
-                className="w-full bg-surface-container-low/60 border border-outline-variant/30 rounded-[4px] px-4 py-3 text-sm text-on-surface focus:outline-none focus:border-tertiary focus:ring-1 focus:ring-tertiary transition-all"
+                className="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-xl px-4 py-3 text-sm text-on-surface focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all hover:border-outline-variant"
+                placeholder="••••••••"
               />
             </div>
-            <div>
-              <label className="block text-sm font-bold text-on-surface mb-2">تأكيد كلمة المرور</label>
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-on-surface-variant">تأكيد كلمة المرور الجديدة</label>
               <input
                 type="password"
                 value={passwordForm.confirmPassword}
                 onChange={(e) => setPasswordForm((p) => ({ ...p, confirmPassword: e.target.value }))}
-                className="w-full bg-surface-container-low/60 border border-outline-variant/30 rounded-[4px] px-4 py-3 text-sm text-on-surface focus:outline-none focus:border-tertiary focus:ring-1 focus:ring-tertiary transition-all"
+                className={`w-full bg-surface-container-lowest border rounded-xl px-4 py-3 text-sm text-on-surface focus:outline-none transition-all hover:border-outline-variant ${
+                  passwordMismatch 
+                    ? 'border-error focus:border-error focus:ring-2 focus:ring-error/20' 
+                    : 'border-outline-variant/50 focus:border-primary focus:ring-2 focus:ring-primary/20'
+                }`}
+                placeholder="••••••••"
               />
             </div>
           </div>
 
-          {passwordMismatch && <p className="text-sm text-error font-bold">كلمتا المرور غير متطابقتين</p>}
-          {passwordError && <p className="text-sm text-error font-bold">{passwordError}</p>}
-          {passwordSuccess && <p className="text-sm text-primary font-bold">تم تغيير كلمة المرور بنجاح</p>}
+          {/* Feedback Messages */}
+          {(passwordMismatch || passwordError) && (
+            <div className="flex items-center gap-2 p-4 bg-error/10 text-error rounded-xl border border-error/20">
+              <span className="material-symbols-outlined text-lg">error</span>
+              <p className="text-sm font-medium">
+                {passwordMismatch ? 'كلمتا المرور غير متطابقتين. يرجى التأكد والمحاولة مجدداً.' : passwordError}
+              </p>
+            </div>
+          )}
+          {passwordSuccess && (
+            <div className="flex items-center gap-2 p-4 bg-[#a4ceb5]/20 text-[#02422a] rounded-xl border border-[#a4ceb5]/40">
+              <span className="material-symbols-outlined text-lg">check_circle</span>
+              <p className="text-sm font-medium">تم تحديث كلمة المرور بنجاح.</p>
+            </div>
+          )}
 
-          <div className="flex justify-end pt-2">
+          <div className="flex justify-end pt-4 border-t border-outline-variant/20">
             <button
               type="submit"
-              disabled={isSavingPassword}
-              className="px-8 py-2.5 bg-primary text-on-primary rounded-[4px] font-bold text-sm hover:opacity-90 transition-all disabled:opacity-50 flex items-center gap-2"
+              disabled={isSavingPassword || !passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword}
+              className="px-8 py-3 bg-surface-container-high hover:bg-primary hover:text-on-primary text-on-surface rounded-xl font-bold text-sm shadow-sm hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-w-[160px]"
             >
-              {isSavingPassword && <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>}
-              تحديث كلمة المرور
+              {isSavingPassword ? (
+                <>
+                  <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
+                  جاري التحديث...
+                </>
+              ) : (
+                <>
+                  <span className="material-symbols-outlined text-[18px]">key</span>
+                  تحديث الأمان
+                </>
+              )}
             </button>
           </div>
         </form>
       </div>
+
     </div>
   );
 }

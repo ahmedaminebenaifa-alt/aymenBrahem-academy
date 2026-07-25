@@ -5,9 +5,18 @@ import RecentCoursesList from '../../../components/dashboard/admin/home/recentCo
 import UpcomingSessions from '../../../components/dashboard/admin/home/upcomingSessions';
 import RecentActivity from '../../../components/dashboard/admin/home/recentActivity';
 
+// IMPORT THE SIDEBAR HOOK
+import { useSidebar } from '../../../context/SidebarContext'; 
+
 const AdminHome = () => {
+  // Fetch the sidebar state
+  const { isOpen } = useSidebar(); 
+
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className={`space-y-6 animate-fade-in p-4 md:py-6 md:pl-8 transition-[padding] duration-500 ease-[cubic-bezier(0.2,1,0.2,1)] ${
+      isOpen ? 'md:pr-[300px]' : 'md:pr-[120px]'
+    }`}>
+      
       <AdminStatsOverview />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">

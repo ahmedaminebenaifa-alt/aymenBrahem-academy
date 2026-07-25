@@ -22,15 +22,15 @@ const AdminStatsOverview = () => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-      <div className="md:col-span-1 bg-white/70 backdrop-blur-md p-6 rounded-xl border border-outline-variant/30 shadow-sm border-t-2 border-t-primary transition-all duration-300 hover:shadow-md">
+      <div className="md:col-span-1 bg-surface-container-lowest/70 backdrop-blur-md p-6 rounded-xl border border-outline-variant/30 shadow-sm border-t-2 border-t-primary transition-all duration-300 hover:shadow-md">
         <div className="flex justify-between items-start">
           <div>
             <p className="font-semibold text-sm text-on-surface-variant">إجمالي الطلاب</p>
             {isLoading ? (
-              <div className="h-9 w-24 bg-gray-200 animate-pulse rounded mt-2"></div>
+              <div className="h-9 w-24 bg-outline-variant/20 animate-pulse rounded mt-2"></div>
             ) : (
               <h3 className="font-arabic text-3xl font-bold mt-2 text-on-surface">
-                {stats.totalStudents.toLocaleString()}
+                {stats.totalStudents.toLocaleString('en-US')}
               </h3>
             )}
           </div>
@@ -40,13 +40,13 @@ const AdminStatsOverview = () => {
         </div>
         <div className="mt-4 flex items-center gap-2 text-xs font-bold">
           {isLoading ? (
-            <div className="h-4 w-32 bg-gray-200 animate-pulse rounded"></div>
+            <div className="h-4 w-32 bg-outline-variant/20 animate-pulse rounded"></div>
           ) : (
             <>
-              <span className={`material-symbols-outlined text-sm ${stats.studentsTrend >= 0 ? 'text-green-700' : 'text-red-600'}`}>
+              <span className={`material-symbols-outlined text-sm ${stats.studentsTrend >= 0 ? 'text-primary' : 'text-error'}`}>
                 {stats.studentsTrend >= 0 ? 'trending_up' : 'trending_down'}
               </span>
-              <span className={stats.studentsTrend >= 0 ? 'text-green-700' : 'text-red-600'}>
+              <span className={stats.studentsTrend >= 0 ? 'text-primary' : 'text-error'}>
                 {stats.studentsTrend >= 0 ? '+' : ''}{stats.studentsTrend}% عن الشهر الماضي
               </span>
             </>
@@ -54,15 +54,15 @@ const AdminStatsOverview = () => {
         </div>
       </div>
 
-      <div className="md:col-span-1 bg-white/70 backdrop-blur-md p-6 rounded-xl border border-outline-variant/30 shadow-sm border-t-2 border-t-tertiary transition-all duration-300 hover:shadow-md">
+      <div className="md:col-span-1 bg-surface-container-lowest/70 backdrop-blur-md p-6 rounded-xl border border-outline-variant/30 shadow-sm border-t-2 border-t-tertiary transition-all duration-300 hover:shadow-md">
         <div className="flex justify-between items-start">
           <div>
             <p className="font-semibold text-sm text-on-surface-variant">الدورات النشطة</p>
             {isLoading ? (
-              <div className="h-9 w-16 bg-gray-200 animate-pulse rounded mt-2"></div>
+              <div className="h-9 w-16 bg-outline-variant/20 animate-pulse rounded mt-2"></div>
             ) : (
               <h3 className="font-arabic text-3xl font-bold mt-2 text-on-surface">
-                {stats.activeCourses}
+                {stats.activeCourses.toLocaleString('en-US')}
               </h3>
             )}
           </div>
@@ -72,22 +72,22 @@ const AdminStatsOverview = () => {
         </div>
         <div className="mt-4 flex items-center gap-2 text-xs text-on-surface-variant font-medium">
           {isLoading ? (
-            <div className="h-4 w-28 bg-gray-200 animate-pulse rounded"></div>
+            <div className="h-4 w-28 bg-outline-variant/20 animate-pulse rounded"></div>
           ) : (
             <span>{stats.coursesInPrep} دورات قيد التحضير</span>
           )}
         </div>
       </div>
 
-      <div className="md:col-span-1 bg-white/70 backdrop-blur-md p-6 rounded-xl border border-outline-variant/30 shadow-sm border-t-2 border-t-secondary transition-all duration-300 hover:shadow-md">
+      <div className="md:col-span-1 bg-surface-container-lowest/70 backdrop-blur-md p-6 rounded-xl border border-outline-variant/30 shadow-sm border-t-2 border-t-secondary transition-all duration-300 hover:shadow-md">
         <div className="flex justify-between items-start">
           <div>
             <p className="font-semibold text-sm text-on-surface-variant">الالتحاقات الجديدة</p>
             {isLoading ? (
-              <div className="h-9 w-20 bg-gray-200 animate-pulse rounded mt-2"></div>
+              <div className="h-9 w-20 bg-outline-variant/20 animate-pulse rounded mt-2"></div>
             ) : (
               <h3 className="font-arabic text-3xl font-bold mt-2 text-on-surface">
-                {stats.newEnrollments}
+                {stats.newEnrollments.toLocaleString('en-US')}
               </h3>
             )}
           </div>
@@ -101,14 +101,14 @@ const AdminStatsOverview = () => {
       </div>
 
       <div className="md:col-span-1 bg-primary text-on-primary p-6 rounded-xl shadow-sm border-t-2 border-t-primary flex items-center justify-center relative overflow-hidden">
-        <div className="absolute w-32 h-32 bg-white/10 rounded-full blur-2xl top-0 left-0 pointer-events-none"></div>
+        <div className="absolute w-32 h-32 bg-on-primary/10 rounded-full blur-2xl top-0 left-0 pointer-events-none"></div>
         
         <div className="text-center relative z-10">
           <p className="font-semibold text-sm opacity-80">ساعة الحائط</p>
-          <h2 className="text-3xl font-bold tracking-widest mt-1 font-mono text-white" dir="ltr">
+          <h2 className="text-3xl font-bold tracking-widest mt-1 font-mono text-on-primary" dir="ltr">
             {time}
           </h2>
-          <p className="text-xs mt-1 text-on-primary-container">توقيت تونس</p>
+          <p className="text-xs mt-1 text-on-primary opacity-70">توقيت تونس</p>
         </div>
       </div>
     </div>

@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import api from '../../../../api/axios';
 
 const ICONS = {
   ENROLLMENT: { icon: 'person_add', color: 'text-primary' },
-  COURSE_PUBLISHED: { icon: 'auto_stories', color: 'text-green-600' },
-  LIVE_STARTED: { icon: 'podcasts', color: 'text-red-600' },
+  COURSE_PUBLISHED: { icon: 'auto_stories', color: 'text-primary' },
+  LIVE_STARTED: { icon: 'podcasts', color: 'text-error' },
   LIVE_ENDED: { icon: 'stop_circle', color: 'text-on-surface-variant' },
 };
 
@@ -19,26 +20,19 @@ function timeAgo(dateStr) {
   return `منذ ${days} يوم`;
 }
 
-const RecentActivity = () => {
-  const [activities, setActivities] = useState([]);
-  const [loading, setLoading] = useState(true);
+const fetchActivity = async () => {
+  const { data } = await api.get('/dashboard/recent-activity');
+  return data.data;
+};
 
-  useEffect(() => {
-    const fetchActivity = async () => {
-      try {
-        const { data } = await api.get('/dashboard/recent-activity');
-        setActivities(data.data);
-      } catch (err) {
-        console.error('Failed to fetch recent activity:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchActivity();
-  }, []);
+const RecentActivity = () => {
+  const { data: activities = [], isLoading: loading } = useQuery({
+    queryKey: ['recentActivity'],
+    queryFn: fetchActivity,
+  });
 
   return (
-    <div className="bg-white/70 backdrop-blur-md rounded-xl p-6 shadow-sm border border-outline-variant/30">
+    <div className="bg-surface-container-lowest/70 backdrop-blur-md rounded-xl p-6 shadow-sm border border-outline-variant/30">
       <h3 className="font-arabic font-bold text-lg text-on-surface mb-4 flex items-center gap-2">
         <span className="material-symbols-outlined text-primary">history</span>
         آخر النشاطات
