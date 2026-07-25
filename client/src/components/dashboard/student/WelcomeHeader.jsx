@@ -1,5 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+// IMPORT THE SIDEBAR HOOK (Adjust the path to match your folder structure if necessary)
+import { useSidebar } from '../../../context/SidebarContext'; 
 
 const AYAH = {
   arabic: 'وَقُل رَّبِّ زِدْنِي عِلْمًا',
@@ -13,6 +15,8 @@ const WelcomeHeader = ({
   loading = false,
 }) => {
   const navigate = useNavigate();
+  // Fetch the sidebar state
+  const { isOpen } = useSidebar(); 
 
   const handleCTAClick = () => {
     if (lastLesson?.link) {
@@ -24,20 +28,22 @@ const WelcomeHeader = ({
 
   return (
     <div className="relative p-[1px] bg-gradient-to-b from-transparent via-[#d4af37]/5 to-transparent transition-all duration-300 ease-in-out">      
+      
       {/* 
-        Increased padding drastically (pb-48 md:pb-64) to give the gradient a massive 
-        canvas to fade out smoothly over a long distance.
+        FIXED OVERLAP: 
+        We dynamically adjust the right padding (`pr`) on desktop (`md:`) based on whether the sidebar is open or closed. 
+        The padding transitions at the exact same speed (duration-500, cubic-bezier) as your Sidebar to keep them perfectly in sync!
       */}
-      <section className="relative overflow-hidden px-8 pt-12 pb-48 md:px-12 md:pt-16 md:pb-64 transition-all">
+      <section 
+        className={`relative overflow-hidden pt-12 pb-48 md:pt-16 md:pb-64 pl-8 md:pl-12 pr-8 transition-[padding] duration-500 ease-[cubic-bezier(0.2,1,0.2,1)] ${
+          isOpen ? 'md:pr-[300px]' : 'md:pr-[120px]'
+        }`}
+      >
         
         {/* ISOLATED BACKGROUND LAYER WITH MULTI-STOP EASED MASK */}
         <div 
           className="absolute inset-0 z-0 pointer-events-none overflow-hidden bg-[#023321]"
           style={{
-            /* 
-               Multi-stop gradient: Instead of a straight line, this curves the opacity down slowly.
-               Solid until 55%, then eases out gradually so there is no noticeable "edge" 
-            */
             WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 55%, rgba(0,0,0,0.85) 65%, rgba(0,0,0,0.6) 75%, rgba(0,0,0,0.3) 85%, rgba(0,0,0,0.1) 95%, transparent 100%)',
             maskImage: 'linear-gradient(to bottom, black 0%, black 55%, rgba(0,0,0,0.85) 65%, rgba(0,0,0,0.6) 75%, rgba(0,0,0,0.3) 85%, rgba(0,0,0,0.1) 95%, transparent 100%)'
           }}

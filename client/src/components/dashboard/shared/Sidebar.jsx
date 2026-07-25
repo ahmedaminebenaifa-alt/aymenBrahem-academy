@@ -27,139 +27,172 @@ export default function Sidebar() {
   
   const { orders: pendingOrders } = isAdmin ? usePendingOrders() : { orders: [] };
 
-  const navLinkClass = ({ isActive }) =>
-    `flex items-center gap-3.5 px-3.5 py-3 rounded-2xl font-medium text-sm transition-all duration-300 group relative whitespace-nowrap ${
-      isActive
-        ? 'bg-[var(--primary)] text-[var(--surface)] font-bold shadow-md shadow-[var(--primary)]/20'
-        : 'text-[var(--on-surface-variant)] hover:bg-[var(--surface-container-high)] hover:text-[var(--on-surface)]'
-    } ${!isOpen ? 'md:justify-center md:px-0' : ''}`;
-
   return (
     <>
       {/* Mobile Backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/40 backdrop-blur-xs z-[90] md:hidden transition-opacity duration-300"
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[115] md:hidden transition-opacity duration-300"
           onClick={close}
         />
       )}
 
-      {/* Floating Pill Sidebar Container (Taki Academy Style) */}
+      {/* 
+        Outer Container: Controls the width clipping mask.
+        In RTL, shrinking the width pulls the left edge in, keeping the right edge stationary.
+      */}
       <aside
         dir="rtl"
-        className={`fixed right-3 md:right-4 top-[80px] h-[calc(100vh-96px)] z-[100] bg-[var(--surface-container-lowest)] border border-[var(--outline-variant)]/30 rounded-3xl flex flex-col py-4 shadow-lg transition-all duration-300 ease-in-out ${
+        className={`fixed right-0 md:right-4 top-[80px] h-[calc(100vh-96px)] z-[120] bg-[var(--surface-container-lowest)] border border-[var(--outline-variant)]/20 rounded-l-3xl md:rounded-[32px] flex flex-col shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-[width,transform] duration-500 ease-[cubic-bezier(0.2,1,0.2,1)] overflow-hidden ${
           isOpen 
-            ? 'w-64 translate-x-0' 
-            : 'w-64 translate-x-[calc(100%+1rem)] md:translate-x-0 md:w-20'
+            ? 'w-[260px] translate-x-0' 
+            : 'w-[260px] translate-x-[calc(100%+1rem)] md:translate-x-0 md:w-[84px]'
         }`}
       >
-        {/* Toggle Arrow Pill Top Action */}
-        <div className="px-3 mb-4 hidden md:flex items-center justify-end">
-          <button
-            onClick={toggle}
-            className="w-8 h-8 rounded-full bg-[var(--surface-container-low)] text-[var(--on-surface-variant)] hover:text-[var(--primary)] flex items-center justify-center transition-transform hover:scale-105"
-            title={isOpen ? 'طي القائمة' : 'توسيع القائمة'}
-          >
-            <span className={`material-symbols-outlined text-lg transition-transform duration-300 ${isOpen ? '' : 'rotate-180'}`}>
-              chevron_right
-            </span>
-          </button>
-        </div>
+        {/* Fixed Inner Container: Never shrinks. Guarantees zero text-wrapping jitter. */}
+        <div className="w-[260px] h-full flex flex-col py-6">
+          
+          {/* Toggle Button - Perfectly aligned to stay centered in closed state */}
+          <div className="h-12 flex items-center pr-[22px] mb-6">
+            <button
+              onClick={toggle}
+              className="w-10 h-10 rounded-full bg-[var(--surface-container-lowest)] shadow-sm border border-[var(--outline-variant)]/40 flex items-center justify-center text-[var(--on-surface-variant)] hover:text-[var(--on-surface)] hover:bg-[var(--surface-container)] hover:scale-105 transition-all duration-300"
+              title={isOpen ? 'طي القائمة' : 'توسيع القائمة'}
+            >
+              <span className="material-symbols-outlined text-[20px]">
+                {isOpen ? 'chevron_right' : 'chevron_left'}
+              </span>
+            </button>
+          </div>
 
-        {/* User Profile Card */}
-        <div className="px-3 mb-4">
-          <div className={`relative overflow-hidden bg-[var(--surface-container-low)] border border-[var(--outline-variant)]/20 p-2.5 rounded-2xl flex items-center gap-3 transition-all duration-300 ${!isOpen ? 'md:justify-center md:p-2' : ''}`}>
-            <div className="relative shrink-0">
+          {/* User Profile Card */}
+          <div className="flex items-center pr-[16px] mb-8 group cursor-pointer">
+            <div className="relative shrink-0 w-[52px] h-[52px] rounded-full p-0.5 border-2 border-transparent group-hover:border-[var(--primary)]/50 transition-colors duration-300">
               {user?.profileImage ? (
                 <img
                   src={user.profileImage}
                   alt={user.name}
-                  className="w-10 h-10 rounded-xl object-cover"
+                  className="w-full h-full rounded-full object-cover"
                 />
               ) : (
-                <div className="w-10 h-10 rounded-xl bg-[var(--primary)]/10 text-[var(--primary)] font-bold flex items-center justify-center text-sm">
+                <div className="w-full h-full rounded-full bg-[var(--primary)]/10 text-[var(--primary)] font-bold flex items-center justify-center text-sm">
                   {user?.name ? user.name.trim().charAt(0) : (isAdmin ? 'م' : 'ط')}
                 </div>
               )}
-              <span className="absolute -bottom-0.5 -left-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-[var(--surface)] rounded-full" />
+              {/* Online Indicator */}
+              <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-[var(--surface-container-lowest)] rounded-full" />
             </div>
 
-            {isOpen && (
-              <div className="overflow-hidden flex flex-col justify-center flex-1">
-                <h3 className="font-bold text-xs text-[var(--on-surface)] truncate">
-                  {user?.name || (isAdmin ? 'المسؤول' : 'الطالب')}
-                </h3>
-                <p className="text-[10px] text-[var(--on-surface-variant)]/70 truncate font-sans">
-                  {user?.email || ''}
-                </p>
+            {/* Smooth Text Reveal */}
+            <div className={`mr-3 flex flex-col justify-center transition-opacity duration-300 ease-in-out ${isOpen ? 'opacity-100 delay-100' : 'opacity-0 pointer-events-none'}`}>
+              <h3 className="font-bold text-sm text-[var(--on-surface)] truncate w-[160px] group-hover:text-[var(--primary)] transition-colors">
+                {user?.name || (isAdmin ? 'المسؤول' : 'الطالب')}
+              </h3>
+              <p className="text-[11px] text-[var(--on-surface-variant)]/80 truncate w-[160px] font-sans">
+                {user?.email || ''}
+              </p>
+            </div>
+          </div>
+
+          {/* Navigation Links */}
+          <nav className="flex-1 flex flex-col gap-2 overflow-y-auto overflow-x-hidden scrollbar-hide">
+            {links.map((link) => (
+              <NavLink 
+                key={link.to} 
+                to={link.to} 
+                end={link.end} 
+                onClick={() => window.innerWidth < 768 && close()}
+                className="group flex items-center pr-[16px] relative"
+                title={!isOpen ? link.label : ''}
+              >
+                {({ isActive }) => (
+                  <>
+                    <div className={`w-[52px] h-[52px] rounded-[18px] flex items-center justify-center shrink-0 transition-all duration-300 ${
+                      isActive
+                        ? 'bg-[var(--primary)] text-[var(--on-primary)] shadow-md shadow-[var(--primary)]/20'
+                        : 'text-[var(--on-surface-variant)] group-hover:bg-[var(--surface-container)] group-hover:text-[var(--on-surface)]'
+                    }`}>
+                      <span className="material-symbols-outlined text-[24px]">
+                        {link.icon}
+                      </span>
+                      
+                      {link.to === '/dashboard/admin/orders/pending' && pendingOrders.length > 0 && (
+                        <span className={`absolute top-0 right-1 bg-[var(--error)] text-white text-[10px] font-bold rounded-full min-w-[20px] h-[20px] flex items-center justify-center px-1 border-2 border-[var(--surface-container-lowest)]`}>
+                          {pendingOrders.length}
+                        </span>
+                      )}
+                    </div>
+                    
+                    <span className={`mr-4 font-bold text-[13px] transition-all duration-300 ease-in-out ${
+                      isActive ? 'text-[var(--on-surface)]' : 'text-[var(--on-surface-variant)] group-hover:text-[var(--on-surface)]'
+                    } ${isOpen ? 'opacity-100 delay-100' : 'opacity-0 pointer-events-none'}`}>
+                      {link.label}
+                    </span>
+                  </>
+                )}
+              </NavLink>
+            ))}
+
+            {/* Admin Add Course Button */}
+            {isAdmin && (
+              <div className="mt-2">
+                <NavLink
+                  to="/dashboard/admin/courses/add"
+                  onClick={() => window.innerWidth < 768 && close()}
+                  className="group flex items-center pr-[16px] relative"
+                  title={!isOpen ? 'إضافة درس جديد' : ''}
+                >
+                  <div className="w-[52px] h-[52px] rounded-[18px] flex items-center justify-center shrink-0 transition-all duration-300 bg-[var(--primary-container)] text-[var(--on-primary-container)] group-hover:bg-[var(--primary)] group-hover:text-[var(--on-primary)] shadow-sm">
+                    <span className="material-symbols-outlined text-[24px]">add</span>
+                  </div>
+                  <span className={`mr-4 font-bold text-[13px] transition-opacity duration-300 ease-in-out text-[var(--primary)] ${isOpen ? 'opacity-100 delay-100' : 'opacity-0 pointer-events-none'}`}>
+                    إضافة درس
+                  </span>
+                </NavLink>
               </div>
             )}
-          </div>
-        </div>
+          </nav>
 
-        {/* Navigation Links */}
-        <nav className="flex-1 space-y-1.5 px-2 overflow-x-hidden overflow-y-auto scrollbar-hide">
-          {links.map((link) => (
-            <NavLink 
-              key={link.to} 
-              to={link.to} 
-              end={link.end} 
-              className={navLinkClass} 
-              onClick={() => window.innerWidth < 768 && close()}
-              title={!isOpen ? link.label : ''}
-            >
-              <span className="material-symbols-outlined text-xl shrink-0">
-                {link.icon}
-              </span>
+          {/* Sidebar Footer (Support & Logout) */}
+          <div className="mt-auto pt-4 flex flex-col gap-2">
+            
+            {/* Subtle Divider */}
+            <div className="w-[52px] h-[1px] bg-[var(--outline-variant)]/20 mr-[16px] mb-2" />
+            
+            {/* Support Area */}
+            <div className="relative flex items-center pr-[16px] h-[52px]">
               
-              {isOpen && (
-                <span className="truncate flex-1">
-                  {link.label}
-                </span>
-              )}
-              
-              {link.to === '/dashboard/admin/orders/pending' && pendingOrders.length > 0 && (
-                <span className={`bg-error text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 ${!isOpen ? 'absolute top-1 left-1' : ''}`}>
-                  {pendingOrders.length}
-                </span>
-              )}
-            </NavLink>
-          ))}
-        </nav>
+              {/* Full Support Component */}
+              <div className={`absolute right-[16px] w-[228px] transition-opacity duration-300 ease-in-out ${isOpen ? 'opacity-100 z-20 delay-100' : 'opacity-0 pointer-events-none'}`}>
+                 <SupportButton userName={user?.name} userEmail={user?.email} />
+              </div>
 
-        {/* Admin Action Button */}
-        {isAdmin && (
-          <div className="px-2 my-2">
-            <NavLink
-              to="/dashboard/admin/courses/add"
-              onClick={() => window.innerWidth < 768 && close()}
-              className={`w-full flex items-center gap-2 py-3 px-3 rounded-2xl font-bold text-sm bg-[var(--primary-container)] text-[var(--on-primary-container)] hover:bg-[var(--primary)] hover:text-white transition-all shadow-xs ${!isOpen ? 'md:justify-center' : ''}`}
-              title={!isOpen ? 'إضافة درس جديد' : ''}
-            >
-              <span className="material-symbols-outlined text-lg shrink-0">add</span>
-              {isOpen && <span className="truncate">إضافة درس جديد</span>}
-            </NavLink>
-          </div>
-        )}
-
-        {/* Sidebar Footer */}
-        <div className="px-2 mt-auto space-y-1 pt-3 border-t border-[var(--outline-variant)]/20">
-          {isOpen && (
-            <div className="mb-2">
-              <SupportButton userName={user?.name} userEmail={user?.email} />
+              {/* Collapsed Support Icon */}
+              <button
+                className={`absolute right-[16px] w-[52px] h-[52px] rounded-[18px] flex items-center justify-center text-[var(--on-surface-variant)] hover:bg-[var(--surface-container)] hover:text-[var(--on-surface)] transition-all duration-300 ${!isOpen ? 'opacity-100 z-20 delay-100' : 'opacity-0 pointer-events-none'}`}
+                title="الدعم الفني"
+              >
+                <span className="material-symbols-outlined text-[24px]">help_outline</span>
+              </button>
             </div>
-          )}
 
-          <button
-            onClick={logout}
-            className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-red-600 hover:bg-red-500/10 rounded-2xl text-xs font-bold transition-all ${!isOpen ? 'md:justify-center' : ''}`}
-            title={!isOpen ? "تسجيل الخروج" : ""}
-          >
-            <span className="material-symbols-outlined text-lg shrink-0">
-              logout
-            </span>
-            {isOpen && <span className="truncate">تسجيل الخروج</span>}
-          </button>
+            {/* Logout Button */}
+            <button
+              onClick={logout}
+              className="group flex items-center pr-[16px] relative text-red-600 dark:text-red-400"
+              title={!isOpen ? "تسجيل الخروج" : ""}
+            >
+              <div className="w-[52px] h-[52px] rounded-[18px] flex items-center justify-center shrink-0 transition-all duration-300 group-hover:bg-red-500/10 group-hover:text-red-600 dark:group-hover:text-red-300">
+                <span className="material-symbols-outlined text-[24px]">
+                  logout
+                </span>
+              </div>
+              <span className={`mr-4 font-bold text-[13px] transition-all duration-300 ease-in-out group-hover:text-red-700 dark:group-hover:text-red-300 ${isOpen ? 'opacity-100 delay-100' : 'opacity-0 pointer-events-none'}`}>
+                تسجيل الخروج
+              </span>
+            </button>
+          </div>
+
         </div>
       </aside>
     </>

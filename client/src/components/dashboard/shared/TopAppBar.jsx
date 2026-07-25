@@ -33,7 +33,7 @@ function SearchInput({ query, setQuery, isSearchOpen, setIsSearchOpen, clear, re
           onChange={(e) => { setQuery(e.target.value); setIsSearchOpen(true); }}
           onFocus={() => setIsSearchOpen(true)}
           placeholder={placeholder}
-          className="w-full bg-[var(--surface-container-lowest)] border border-[var(--outline-variant)]/30 rounded-full pr-12 pl-10 py-2.5 text-sm text-[var(--on-surface)] placeholder:text-[var(--on-surface-variant)]/60 focus:outline-none focus:bg-[var(--surface)] focus:border-[var(--primary)]/40 focus:ring-4 focus:ring-[var(--primary)]/10 transition-all duration-[400ms] ease-[cubic-bezier(0.23,1,0.32,1)] shadow-sm"
+          className="w-full bg-[var(--surface-container-lowest)] border border-[var(--outline-variant)]/40 rounded-full pr-12 pl-12 py-2.5 text-sm text-[var(--on-surface)] placeholder:text-[var(--on-surface-variant)]/60 focus:outline-none focus:bg-[var(--surface)] focus:border-[var(--primary)]/40 focus:ring-4 focus:ring-[var(--primary)]/10 transition-all duration-[400ms] ease-[cubic-bezier(0.23,1,0.32,1)] shadow-sm"
         />
         {query ? (
           <button 
@@ -91,18 +91,6 @@ function SearchInput({ query, setQuery, isSearchOpen, setIsSearchOpen, clear, re
                         <span className="truncate">{highlightMatches(course.matchText, query)}</span>
                       </p>
                     )}
-
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className={`text-xs font-bold ${course.isFree ? 'text-[var(--primary)]' : 'text-[var(--on-surface-variant)]'}`}>
-                        {course.isFree ? 'مجانية بالكامل' : `${Number(course.price).toLocaleString('en-US')} د.ت`}
-                      </span>
-                      {isAdmin && !course.published && (
-                        <>
-                          <span className="w-1 h-1 rounded-full bg-[var(--outline-variant)]/50"></span>
-                          <span className="text-[10px] bg-[var(--surface-container-high)] text-[var(--on-surface-variant)] px-1.5 py-0.5 rounded-md font-medium">مسودة</span>
-                        </>
-                      )}
-                    </div>
                   </div>
                   <span className="material-symbols-outlined text-[var(--outline)] opacity-0 group-hover/item:opacity-100 -translate-x-2 group-hover/item:translate-x-0 transition-all duration-[500ms] ease-[cubic-bezier(0.23,1,0.32,1)] ml-2">
                     arrow_forward_ios
@@ -213,38 +201,35 @@ export default function TopAppBar() {
           animation: dropdownFade 0.4s cubic-bezier(0.23, 1, 0.32, 1) forwards;
         }
       `}</style>
+      
       <header
-        className={`z-[110] bg-[var(--surface)]/90 backdrop-blur-xl border-b border-[var(--outline-variant)]/20 w-full fixed top-0 transition-transform duration-[500ms] ease-[cubic-bezier(0.23,1,0.32,1)] shadow-xs ${
+        className={`z-[110] bg-[var(--surface)]/95 backdrop-blur-xl border-b border-[var(--outline-variant)]/30 fixed inset-x-0 top-0 w-full box-border transition-transform duration-[500ms] ease-[cubic-bezier(0.23,1,0.32,1)] shadow-xs ${
           isHidden ? '-translate-y-full' : 'translate-y-0'
         }`}
       >
-        <div className="flex justify-between items-center pr-4 pl-4 md:pr-8 md:pl-6 w-full h-16 md:h-[72px]">
+        <div className="flex items-center justify-between px-4 md:px-8 w-full h-16 md:h-[72px]">
           
-          {/* Right Side: Font-Only Logo + Sidebar Toggle Button */}
-          <div className="shrink-0 flex items-center gap-3 md:gap-5 justify-start">
+          {/* Right Side: Menu Toggle + Main Title (Student Portal Text Removed) */}
+          <div className="flex-1 flex items-center gap-3 md:gap-4 justify-start min-w-0">
             <button 
               onClick={toggle} 
               aria-label="القائمة الجانبية"
-              className="relative w-10 h-10 flex items-center justify-center rounded-xl text-[var(--on-surface)] hover:bg-[var(--surface-container-low)] hover:text-[var(--primary)] transition-all duration-300 group focus:outline-none"
+              className="relative w-10 h-10 flex items-center justify-center rounded-xl text-[var(--on-surface)] hover:bg-[var(--surface-container-low)] hover:text-[var(--primary)] transition-all duration-300 group focus:outline-none shrink-0"
             >
-              <span className="material-symbols-outlined text-[24px] relative z-10 transition-transform duration-300 group-hover:scale-110">
+              <span className="material-symbols-outlined text-[26px] relative z-10 transition-transform duration-300 group-hover:scale-110">
                 menu
               </span>
             </button>
 
-            {/* Pure Typography Logo (No Icons/Caps) */}
-            <div className="flex flex-col text-right select-none">
-              <h1 className="font-display font-black text-base md:text-xl text-[var(--primary)] leading-tight tracking-tight">
-                أكاديمية أيمن إبراهيم
+            <div className="flex items-center select-none truncate">
+              <h1 className="font-display font-black text-base md:text-xl text-[var(--on-surface)] leading-none tracking-tight truncate">
+                أكاديمية أيمن براهيم
               </h1>
-              <span className="text-[9px] md:text-[10px] font-bold text-[var(--on-surface-variant)] opacity-70 tracking-wider uppercase">
-                {isAdmin ? 'Admin Portal' : 'Student Portal'}
-              </span>
             </div>
           </div>
 
-          {/* Search Bar Center */}
-          <div className="flex-1 max-w-xl mx-4 md:mx-8 hidden md:block relative z-10" ref={searchRef}>
+          {/* Center Side: Search Bar */}
+          <div className="hidden md:flex flex-[1.5] justify-center px-4 max-w-2xl relative z-10" ref={searchRef}>
             <SearchInput
               query={query}
               setQuery={setQuery}
@@ -261,8 +246,8 @@ export default function TopAppBar() {
             />
           </div>
 
-          {/* Left Side: Theme, Notification, Profile Dropdown */}
-          <div className="flex items-center gap-2 md:gap-3 shrink-0">
+          {/* Left Side: Actions & Profile */}
+          <div className="flex-1 flex items-center gap-2 md:gap-3 justify-end shrink-0">
             <ThemeToggle />
             <NotificationBell onToggle={setIsNotificationOpen} />
 
@@ -271,7 +256,7 @@ export default function TopAppBar() {
             <div className="relative" ref={menuRef}>
               <button
                 onClick={() => setIsMenuOpen((prev) => !prev)}
-                className="flex items-center gap-2 bg-transparent hover:bg-[var(--surface-container-low)] p-1 md:pl-2 rounded-full transition-all duration-300 active:scale-95 group cursor-pointer"
+                className="flex items-center gap-2 bg-transparent hover:bg-[var(--surface-container-low)] p-1 md:pl-3 rounded-full transition-all duration-300 active:scale-95 group cursor-pointer"
               >
                 {user?.profileImage ? (
                   <img 
