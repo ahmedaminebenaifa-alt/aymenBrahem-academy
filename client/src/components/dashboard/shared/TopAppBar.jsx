@@ -19,9 +19,7 @@ const MATCH_LABELS = {
   content: 'في محتوى الدرس',
 };
 
-// ... (Keep your exact SearchInput component here, no changes needed) ...
 function SearchInput({ query, setQuery, isSearchOpen, setIsSearchOpen, clear, results, loading, isAdmin, onResultClick, placeholder, inputRef, showShortcutHint = false }) {
-  // ... (Your exact SearchInput code) ...
   return (
     <>
       <div className="relative flex items-center w-full group">
@@ -216,86 +214,37 @@ export default function TopAppBar() {
         }
       `}</style>
       <header
-        className={`z-[110] bg-[var(--surface)]/85 backdrop-blur-xl border-b border-[var(--outline-variant)]/20 w-full fixed top-0 transition-transform duration-[500ms] ease-[cubic-bezier(0.23,1,0.32,1)] shadow-sm ${
+        className={`z-[110] bg-[var(--surface)]/90 backdrop-blur-xl border-b border-[var(--outline-variant)]/20 w-full fixed top-0 transition-transform duration-[500ms] ease-[cubic-bezier(0.23,1,0.32,1)] shadow-xs ${
           isHidden ? '-translate-y-full' : 'translate-y-0'
         }`}
       >
-        <div className="flex justify-between items-center pr-6 pl-4 md:pr-10 md:pl-6 w-full h-16 md:h-[72px]">
-          <div className="flex items-center gap-2 md:gap-4 shrink-0">
-            <div className="flex items-center gap-2 md:gap-3">
-              <ThemeToggle />
-              <NotificationBell onToggle={setIsNotificationOpen} />
+        <div className="flex justify-between items-center pr-4 pl-4 md:pr-8 md:pl-6 w-full h-16 md:h-[72px]">
+          
+          {/* Right Side: Font-Only Logo + Sidebar Toggle Button */}
+          <div className="shrink-0 flex items-center gap-3 md:gap-5 justify-start">
+            <button 
+              onClick={toggle} 
+              aria-label="القائمة الجانبية"
+              className="relative w-10 h-10 flex items-center justify-center rounded-xl text-[var(--on-surface)] hover:bg-[var(--surface-container-low)] hover:text-[var(--primary)] transition-all duration-300 group focus:outline-none"
+            >
+              <span className="material-symbols-outlined text-[24px] relative z-10 transition-transform duration-300 group-hover:scale-110">
+                menu
+              </span>
+            </button>
 
-              <div className="w-[1px] h-6 bg-[var(--outline-variant)]/30 mx-1 hidden md:block"></div>
-
-              <div className="relative" ref={menuRef}>
-                <button
-                  onClick={() => setIsMenuOpen((prev) => !prev)}
-                  className="flex items-center gap-2.5 bg-transparent border border-transparent hover:bg-[var(--surface-container-low)] hover:border-[var(--outline-variant)]/30 pl-2 pr-1.5 py-1.5 rounded-full transition-all duration-[500ms] ease-[cubic-bezier(0.23,1,0.32,1)] active:scale-95 group cursor-pointer"
-                >
-                  {user?.profileImage ? (
-                    <img 
-                      src={user.profileImage} 
-                      alt={user.name} 
-                      className="w-8 h-8 md:w-9 md:h-9 rounded-full object-cover border-2 border-[var(--primary)]/20 group-hover:border-[var(--primary)]/50 transition-colors duration-[400ms]" 
-                    />
-                  ) : (
-                    <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-[var(--primary)]/10 flex items-center justify-center border-2 border-[var(--primary)]/20 group-hover:border-[var(--primary)]/50 transition-colors duration-[400ms]">
-                      <span className="material-symbols-outlined text-[var(--primary)] text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>
-                        person
-                      </span>
-                    </div>
-                  )}
-                  
-                  <div className="hidden sm:flex flex-col items-start justify-center pt-0.5">
-                    <span className="text-sm font-bold text-[var(--on-surface)] leading-none mb-1 group-hover:text-[var(--primary)] transition-colors duration-[400ms]">
-                      {displayName}
-                    </span>
-                    <span className="text-[10px] text-[var(--on-surface-variant)] leading-none font-medium">
-                      {isAdmin ? 'مدير النظام' : 'طالب علم'}
-                    </span>
-                  </div>
-
-                  <span className={`material-symbols-outlined text-[var(--outline)] text-xl transition-all duration-[500ms] ease-[cubic-bezier(0.23,1,0.32,1)] ${isMenuOpen ? 'rotate-180 text-[var(--primary)]' : 'group-hover:text-[var(--primary)] group-hover:translate-y-[1px]'}`}>
-                    expand_more
-                  </span>
-                </button>
-
-                {isMenuOpen && (
-                  <div className="absolute right-0 mt-3 w-64 max-w-[calc(100vw-2rem)] bg-[var(--surface)]/95 backdrop-blur-xl border border-[var(--outline-variant)]/20 rounded-2xl shadow-[0_12px_40px_-12px_rgba(0,0,0,0.15)] overflow-hidden z-[60] origin-top-right animate-dropdown-fade">
-                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[var(--primary)] to-transparent opacity-60"></div>
-                    
-                    <div className="px-5 py-4 border-b border-[var(--outline-variant)]/10 bg-[var(--surface-container-lowest)]/50">
-                      <p className="text-base font-bold text-[var(--on-surface)] truncate mb-0.5">{user?.name}</p>
-                      <p className="text-xs text-[var(--on-surface-variant)] truncate font-sans">{user?.email}</p>
-                    </div>
-
-                    <div className="p-2">
-                      <button
-                        onClick={() => { navigate(settingsPath); setIsMenuOpen(false); }}
-                        className="w-full text-right px-4 py-3 text-sm font-bold text-[var(--on-surface-variant)] hover:bg-[var(--surface-container-low)] hover:text-[var(--on-surface)] rounded-xl transition-all duration-[400ms] ease-[cubic-bezier(0.23,1,0.32,1)] active:scale-[0.98] flex items-center gap-3 group"
-                      >
-                        <span className="material-symbols-outlined text-[20px] text-[var(--primary)] transition-transform duration-[400ms] ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:rotate-45">settings</span>
-                        الإعدادات
-                      </button>
-
-                      <div className="h-[1px] bg-[var(--outline-variant)]/10 my-1 mx-3"></div>
-
-                      <button
-                        onClick={logout}
-                        className="w-full text-right px-4 py-3 text-sm font-bold text-red-600 hover:bg-red-50/80 dark:hover:bg-red-500/10 hover:text-red-700 rounded-xl transition-all duration-[400ms] ease-[cubic-bezier(0.23,1,0.32,1)] active:scale-[0.98] flex items-center gap-3 group"
-                      >
-                        <span className="material-symbols-outlined text-[20px] transition-transform duration-[400ms] ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:-translate-x-1">logout</span>
-                        تسجيل الخروج
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
+            {/* Pure Typography Logo (No Icons/Caps) */}
+            <div className="flex flex-col text-right select-none">
+              <h1 className="font-display font-black text-base md:text-xl text-[var(--primary)] leading-tight tracking-tight">
+                أكاديمية أيمن إبراهيم
+              </h1>
+              <span className="text-[9px] md:text-[10px] font-bold text-[var(--on-surface-variant)] opacity-70 tracking-wider uppercase">
+                {isAdmin ? 'Admin Portal' : 'Student Portal'}
+              </span>
             </div>
           </div>
 
-          <div className="flex-1 max-w-xl mx-6 hidden md:block relative z-10" ref={searchRef}>
+          {/* Search Bar Center */}
+          <div className="flex-1 max-w-xl mx-4 md:mx-8 hidden md:block relative z-10" ref={searchRef}>
             <SearchInput
               query={query}
               setQuery={setQuery}
@@ -312,35 +261,80 @@ export default function TopAppBar() {
             />
           </div>
 
-          {/* --- The New Header Logo + Toggle --- */}
-          <div className="shrink-0 flex items-center gap-4 justify-end">
-            <div className="flex items-center gap-3 hidden sm:flex">
-              <div className="text-right">
-                <h2 className="font-display font-bold text-base text-[var(--on-surface)] leading-tight">أكاديمية أيمن ابراهيم</h2>
-                <span className="text-[10px] tracking-wider text-[var(--primary)] uppercase font-extrabold block mt-0.5">
-                  {isAdmin ? 'Admin Portal' : 'Student Portal'}
-                </span>
-              </div>
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--primary)] to-[var(--primary)]/80 flex items-center justify-center text-[var(--surface)] shadow-md shadow-[var(--primary)]/20">
-                <span className="material-symbols-outlined text-xl">school</span>
-              </div>
-            </div>
+          {/* Left Side: Theme, Notification, Profile Dropdown */}
+          <div className="flex items-center gap-2 md:gap-3 shrink-0">
+            <ThemeToggle />
+            <NotificationBell onToggle={setIsNotificationOpen} />
 
-            <button 
-              onClick={toggle} 
-              aria-label="القائمة الجانبية"
-              className="relative w-11 h-11 -mr-2 flex items-center justify-center rounded-full text-[var(--on-surface)] hover:text-[var(--primary)] transition-colors duration-300 group focus:outline-none"
-            >
-              <span className="absolute inset-0 rounded-full bg-[var(--primary)]/10 opacity-0 scale-75 group-hover:opacity-100 group-hover:scale-100 group-active:scale-90 transition-all duration-[400ms] ease-[cubic-bezier(0.16,1,0.3,1)]" />
-              <span className="absolute inset-0 rounded-full border border-[var(--primary)]/30 opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 transition-all duration-[500ms] ease-[cubic-bezier(0.16,1,0.3,1)]" />
-              <span className="material-symbols-outlined text-[26px] relative z-10 transition-transform duration-[500ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105 group-active:scale-90">
-                menu
-              </span>
-            </button>
+            <div className="w-[1px] h-6 bg-[var(--outline-variant)]/30 mx-1 hidden md:block"></div>
+
+            <div className="relative" ref={menuRef}>
+              <button
+                onClick={() => setIsMenuOpen((prev) => !prev)}
+                className="flex items-center gap-2 bg-transparent hover:bg-[var(--surface-container-low)] p-1 md:pl-2 rounded-full transition-all duration-300 active:scale-95 group cursor-pointer"
+              >
+                {user?.profileImage ? (
+                  <img 
+                    src={user.profileImage} 
+                    alt={user.name} 
+                    className="w-8 h-8 md:w-9 md:h-9 rounded-full object-cover border-2 border-[var(--primary)]/20 group-hover:border-[var(--primary)]/50 transition-colors duration-300" 
+                  />
+                ) : (
+                  <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-[var(--primary)]/10 flex items-center justify-center border-2 border-[var(--primary)]/20 group-hover:border-[var(--primary)]/50 transition-colors duration-300">
+                    <span className="material-symbols-outlined text-[var(--primary)] text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>
+                      person
+                    </span>
+                  </div>
+                )}
+                
+                <div className="hidden sm:flex flex-col items-start justify-center pt-0.5">
+                  <span className="text-sm font-bold text-[var(--on-surface)] leading-none mb-1 group-hover:text-[var(--primary)] transition-colors duration-300">
+                    {displayName}
+                  </span>
+                  <span className="text-[10px] text-[var(--on-surface-variant)] leading-none font-medium">
+                    {isAdmin ? 'مدير النظام' : 'طالب علم'}
+                  </span>
+                </div>
+
+                <span className={`material-symbols-outlined text-[var(--outline)] text-xl transition-transform duration-300 ${isMenuOpen ? 'rotate-180 text-[var(--primary)]' : ''}`}>
+                  expand_more
+                </span>
+              </button>
+
+              {isMenuOpen && (
+                <div className="absolute left-0 mt-3 w-64 max-w-[calc(100vw-2rem)] bg-[var(--surface)]/95 backdrop-blur-xl border border-[var(--outline-variant)]/20 rounded-2xl shadow-xl overflow-hidden z-[60] origin-top-left animate-dropdown-fade">
+                  <div className="px-5 py-4 border-b border-[var(--outline-variant)]/10 bg-[var(--surface-container-lowest)]/50">
+                    <p className="text-base font-bold text-[var(--on-surface)] truncate mb-0.5">{user?.name}</p>
+                    <p className="text-xs text-[var(--on-surface-variant)] truncate font-sans">{user?.email}</p>
+                  </div>
+
+                  <div className="p-2">
+                    <button
+                      onClick={() => { navigate(settingsPath); setIsMenuOpen(false); }}
+                      className="w-full text-right px-4 py-3 text-sm font-bold text-[var(--on-surface-variant)] hover:bg-[var(--surface-container-low)] hover:text-[var(--on-surface)] rounded-xl transition-all duration-300 flex items-center gap-3 group"
+                    >
+                      <span className="material-symbols-outlined text-[20px] text-[var(--primary)] group-hover:rotate-45 transition-transform">settings</span>
+                      الإعدادات
+                    </button>
+
+                    <div className="h-[1px] bg-[var(--outline-variant)]/10 my-1 mx-3"></div>
+
+                    <button
+                      onClick={logout}
+                      className="w-full text-right px-4 py-3 text-sm font-bold text-red-600 hover:bg-red-50/80 dark:hover:bg-red-500/10 rounded-xl transition-all duration-300 flex items-center gap-3 group"
+                    >
+                      <span className="material-symbols-outlined text-[20px] group-hover:-translate-x-1 transition-transform">logout</span>
+                      تسجيل الخروج
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
-        <div className="md:hidden px-6 pb-3 relative z-10" ref={mobileSearchRef}>
+        {/* Mobile Search Input */}
+        <div className="md:hidden px-4 pb-3 relative z-10" ref={mobileSearchRef}>
           <SearchInput
             query={query}
             setQuery={setQuery}
