@@ -36,6 +36,7 @@ const LiveStage = () => {
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
   const handleQualityChange = (quality) => {
     setSelectedQuality(quality);
@@ -70,8 +71,11 @@ const LiveStage = () => {
           window.screen.orientation.unlock();
         }
       }
-    } catch (err) {
-      console.error("Error toggling fullscreen:", err);
+    } catch (orientationError) {
+        console.warn("Device does not support forcing orientation lock:", orientationError);
+        if (isIOS) {
+          toast('لتجربة أفضل، قم بتدوير جهازك يدوياً إلى الوضع الأفقي 🔄', { duration: 4000 });
+        }
     }
   };
 

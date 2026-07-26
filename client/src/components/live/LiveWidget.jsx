@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import useLiveSession from '../../hooks/useLiveSession';
 import { useAuth } from '../../context/AuthContext';
 import { useCourses } from '../../hooks/useCourses';
+import SchedulePlanner from '../dashboard/admin/live/SchedulePlanner'
 
 function useElapsed(startedAt) {
   const [elapsed, setElapsed] = useState('00:00');

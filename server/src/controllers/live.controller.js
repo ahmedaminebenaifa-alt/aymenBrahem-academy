@@ -140,3 +140,38 @@ export const revokeMic = asyncHandler(async (req, res) => {
   await liveService.revokeMicPermission(session.roomName, identity);
   res.status(200).json({ status: 'success' });
 });
+
+
+
+export const scheduleLive = asyncHandler(async (req, res) => {
+  const session = await liveService.scheduleSession({
+    hostId: req.user.id,
+    title: req.body.title,
+    courseId: req.body.courseId,
+    scheduledAt: req.body.scheduledAt,
+  });
+  res.status(201).json({ status: 'success', session });
+});
+
+export const getSchedule = asyncHandler(async (req, res) => {
+  const now = new Date();
+  const weekStart = new Date(now);
+  weekStart.setDate(now.getDate() - now.getDay()); // start of week (Sunday)
+  weekStart.setHours(0, 0, 0, 0);
+
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 7);
+
+  const sessions = await liveService.getWeekSchedule(weekStart, weekEnd);
+  res.status(200).json({ status: 'success', data: sessions });
+});
+
+export const startScheduled = asyncHandler(async (req, res) => {
+  const session = await liveService.startScheduledSession(req.params.id);
+  res.status(200).json({ status: 'success', session });
+});
+
+export const cancelScheduled = asyncHandler(async (req, res) => {
+  await liveService.cancelScheduledSession(req.params.id);
+  res.status(200).json({ status: 'success' });
+});

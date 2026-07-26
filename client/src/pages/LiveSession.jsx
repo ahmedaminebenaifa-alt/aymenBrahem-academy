@@ -7,6 +7,7 @@ import { getLiveToken } from '../api/live.api.js';
 import api from '../api/axios.js';
 import { useAuth } from '../context/AuthContext';
 
+import { useSwipeToDismiss } from '../hooks/useSwipeToDismiss'; 
 import LiveStage from '../components/live/LiveStage.jsx';
 import AudioSidebar from '../components/live/AudioSideBar.jsx';
 import ControlBar from '../components/live/ControlBar.jsx';
@@ -102,16 +103,16 @@ const LiveSession = () => {
         
         {/* Sidebar - Drawer on Mobile, Fixed Column on Desktop */}
         <div 
-          className={`absolute lg:relative w-full lg:w-80 h-[65vh] lg:h-full bottom-0 left-0 lg:bottom-auto lg:left-auto bg-gray-900 lg:bg-gray-800 border-t lg:border-t-0 lg:border-l border-gray-800 shrink-0 flex flex-col z-40 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] lg:shadow-none transition-transform duration-300 ease-in-out rounded-t-3xl lg:rounded-none ${
+          className={`absolute lg:relative w-full lg:w-80 h-[65vh] lg:h-full bottom-0 left-0 lg:bottom-auto lg:left-auto bg-gray-900 lg:bg-gray-800 border-t lg:border-t-0 lg:border-l border-gray-800 shrink-0 flex flex-col z-40 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] lg:shadow-none rounded-t-3xl lg:rounded-none ${
             isSidebarOpen ? 'translate-y-0' : 'translate-y-full lg:translate-y-0'
-          }`}
+          } ${isSidebarOpen ? '' : 'transition-transform duration-300 ease-in-out'}`}
+          style={isSidebarOpen ? swipe.style : undefined}
         >
-          {/* Mobile drag handle indicator */}
           <div 
-            className="w-full flex items-center justify-center pt-3 pb-2 lg:hidden cursor-pointer"
-            onClick={() => setIsSidebarOpen(false)}
+            className="w-full flex items-center justify-center pt-3 pb-2 lg:hidden cursor-grab active:cursor-grabbing touch-none"
+            {...swipe.handlers}
           >
-            <div className="w-12 h-1.5 bg-gray-700 rounded-full"></div>
+            <div className={`w-12 h-1.5 rounded-full transition-colors ${swipe.isDragging ? 'bg-gray-500' : 'bg-gray-700'}`}></div>
           </div>
           
           <AudioSidebar roomName={roomName} onClose={() => setIsSidebarOpen(false)} />

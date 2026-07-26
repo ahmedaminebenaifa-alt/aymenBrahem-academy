@@ -58,10 +58,21 @@ export const generateLiveToken = async (user, roomName) => {
     throw new ApiError(404, 'هذا البث غير نشط حاليًا');
   }
 
+  // Course-linked sessions require enrollment; general sessions (no courseId) are open to any logged-in user.
+  // Admins always bypass this check.
+  if (session.courseId && user.role !== 'ADMIN') {
+    const enrollment = await prisma.enrollment.findUnique({
+      where: { userId_courseId: { userId: user.id, courseId: session.courseId } },
+    });
+    if (!enrollment) {
+      throw new ApiError(403, 'يجب التسجيل في الدورة المرتبطة بهذا البث للانضمام إليه');
+    }
+  }
+
   const at = new AccessToken(process.env.LIVEKIT_API_KEY, process.env.LIVEKIT_API_SECRET, {
     identity: user.id,
     name: user.name,
-    ttl: '3h', 
+    ttl: '3h',
   });
 
   const isHost = user.role === 'ADMIN';
@@ -69,10 +80,10 @@ export const generateLiveToken = async (user, roomName) => {
   at.addGrant({
     roomJoin: true,
     room: roomName,
-    canPublish: isHost, 
-    canPublishData: isHost, 
+    canPublish: isHost,
+    canPublishData: isHost,
     canSubscribe: true,
-    roomCreate: false, 
+    roomCreate: false,
   });
 
   return at.toJwt();
@@ -119,4 +130,60 @@ export const revokeMicPermission = async (roomName, identity) => {
     canPublishData: false,
   });
   return roomService.updateParticipant(roomName, identity, JSON.stringify({ handRaised: false }));
+};
+
+
+export const scheduleSession = async ({ hostId, title, courseId, scheduledAt }) => {
+  return prisma.liveSession.create({
+    data: {
+      title: title || 'مجلس علم مجدول',
+      roomName: `live-${Date.now()}`, // reserved now, actually used once it goes live
+      status: 'SCHEDULED',
+      scheduledAt: new Date(scheduledAt),
+      hostId,
+      courseId: courseId || null,
+    },
+  });
+};
+
+export const getWeekSchedule = async (weekStart, weekEnd) => {
+  return prisma.liveSession.findMany({
+    where: {
+      status: { in: ['SCHEDULED', 'LIVE'] },
+      scheduledAt: { gte: weekStart, lte: weekEnd },
+    },
+    include: {
+      host: { select: { id: true, name: true } },
+      course: { select: { id: true, title: true } },
+    },
+    orderBy: { scheduledAt: 'asc' },
+  });
+};
+
+export const startScheduledSession = async (sessionId) => {
+  const session = await prisma.liveSession.findUnique({ where: { id: sessionId } });
+  if (!session || session.status !== 'SCHEDULED') {
+    throw new ApiError(404, 'هذه الجلسة غير موجودة أو ليست مجدولة');
+  }
+
+  const existing = await prisma.liveSession.findFirst({ where: { status: 'LIVE' } });
+  if (existing) {
+    throw new ApiError(409, 'يوجد بث مباشر قيد التشغيل بالفعل');
+  }
+
+  return prisma.liveSession.update({
+    where: { id: sessionId },
+    data: { status: 'LIVE', startedAt: new Date() },
+  });
+};
+
+export const cancelScheduledSession = async (sessionId) => {
+  const session = await prisma.liveSession.findUnique({ where: { id: sessionId } });
+  if (!session || session.status !== 'SCHEDULED') {
+    throw new ApiError(404, 'هذه الجلسة غير موجودة أو ليست مجدولة');
+  }
+  return prisma.liveSession.update({
+    where: { id: sessionId },
+    data: { status: 'CANCELLED' },
+  });
 };

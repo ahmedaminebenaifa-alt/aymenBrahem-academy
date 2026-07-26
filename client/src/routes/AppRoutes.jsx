@@ -23,6 +23,7 @@ const StudentDashboard = lazy(() => import('../pages/dashboard/student/StudentDa
 const StudentSettings = lazy(() => import('../pages/dashboard/student/Settings'));
 const MyCourses = lazy(() => import('../pages/dashboard/student/MyCourses'));
 const StructuredCoursePlayer = lazy(() => import('../pages/dashboard/student/StructuredCoursePlayer'));
+const SchedulePage = lazy(()=> import('../pages/dashboard/student/SchedulePage'));
 
 // Admin Pages
 const AdminHome = lazy(() => import('../pages/dashboard/admin/adminHome'));
@@ -60,6 +61,7 @@ export default function AppRoutes() {
         >
           <Route index element={<StudentDashboard />} />
           <Route path="courses" element={<MyCourses />} />
+          <Route path="schedule" element={<SchedulePage />} />
           <Route path="courses/:courseId/structure" element={<StructuredCoursePlayer />} />
           <Route path="settings" element={<StudentSettings />} />
         </Route>

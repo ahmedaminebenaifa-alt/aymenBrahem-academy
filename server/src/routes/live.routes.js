@@ -14,5 +14,9 @@ router.post('/approve-mic', verifyAuth, requireRole('ADMIN'), liveController.app
 router.post('/kick', verifyAuth, requireRole('ADMIN'), liveController.kickUser);
 router.post('/revoke-mic', verifyAuth, requireRole('ADMIN'), liveController.revokeMic);
 
+router.post('/schedule', verifyAuth, requireRole('ADMIN'), liveController.scheduleLive);
+router.get('/schedule', verifyAuth, liveController.getSchedule);
+router.post('/schedule/:id/start', verifyAuth, requireRole('ADMIN'), liveController.startScheduled);
+router.delete('/schedule/:id', verifyAuth, requireRole('ADMIN'), liveController.cancelScheduled);
 
 export default router;

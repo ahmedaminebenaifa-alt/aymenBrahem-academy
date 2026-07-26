@@ -7,6 +7,7 @@ import SupportButton from '../student/SupportButton';
 const STUDENT_LINKS = [
   { to: '/dashboard/student', end: true, icon: 'dashboard', label: 'الرئيسية' },
   { to: '/dashboard/student/courses', icon: 'menu_book', label: 'دوراتي' },
+  { to: '/dashboard/student/schedule', icon: 'calendar_month', label: 'جدول البث المباشر' },
   { to: '/dashboard/student/settings', icon: 'settings', label: 'الإعدادات' },
 ];
 
