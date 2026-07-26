@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { DisconnectButton, useLocalParticipant } from '@livekit/components-react';
-import { Track } from 'livekit-client';
+import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api/axios';
 
@@ -15,8 +15,11 @@ const ControlBar = () => {
   const canPublish = localParticipant?.permissions?.canPublish;
 
   useEffect(() => {
-    if (canPublish) setIsHandRaised(false);
-  }, [canPublish]);
+    if (canPublish && isHandRaised) {
+      toast.success("تم منحك صلاحية التحدث!", { icon: '🎤' });
+      setIsHandRaised(false);
+    }
+  }, [canPublish, isHandRaised]);
 
   const toggleMic = async () => {
     if (!canPublish || micBusy) return;
@@ -25,6 +28,7 @@ const ControlBar = () => {
       await localParticipant.setMicrophoneEnabled(!isMicrophoneEnabled);
     } catch (err) {
       console.error('Failed to toggle microphone', err);
+      toast.error("حدث خطأ في الميكروفون.");
     } finally {
       setMicBusy(false);
     }
@@ -35,6 +39,7 @@ const ControlBar = () => {
       await localParticipant.setScreenShareEnabled(!isScreenShareEnabled);
     } catch (err) {
       console.error('Failed to toggle screen share', err);
+      toast.error("فشلت مشاركة الشاشة.");
     }
   };
 
@@ -43,14 +48,17 @@ const ControlBar = () => {
     setIsHandRaised(next);
     try {
       await api.post('/live/raise-hand', { isRaised: next });
+      if (next) toast.success('تم رفع اليد، في انتظار موافقة المعلم.');
     } catch (error) {
       console.error('Failed to raise hand', error);
+      toast.error('حدث خطأ أثناء محاولة رفع اليد.');
       setIsHandRaised(!next);
     }
   };
 
   return (
     <div className="flex flex-wrap items-center justify-center gap-2 md:gap-6 w-full px-2 md:px-4">
+      {/* Mic Button */}
       <div className="flex flex-col items-center gap-1">
         <button
           onClick={toggleMic}
@@ -72,13 +80,14 @@ const ControlBar = () => {
         </span>
       </div>
 
+      {/* Screen Share (Admin Only) */}
       {isAdmin && (
         <div className="flex flex-col items-center gap-1">
           <button
             onClick={toggleScreenShare}
             className={`p-3 md:p-4 rounded-full transition-all shadow-lg flex items-center justify-center ${
               isScreenShareEnabled ? 'bg-red-600 hover:bg-red-500' : 'bg-primary hover:opacity-90'
-            } text-on-primary`}
+            } text-white`}
           >
             <span className="material-symbols-outlined text-[20px] md:text-[22px]">
               {isScreenShareEnabled ? 'stop_screen_share' : 'screen_share'}
@@ -90,6 +99,7 @@ const ControlBar = () => {
         </div>
       )}
 
+      {/* Raise Hand (Student Only) */}
       {!isAdmin && !canPublish && (
         <div className="flex flex-col items-center gap-1">
           <button
@@ -106,8 +116,9 @@ const ControlBar = () => {
         </div>
       )}
 
+      {/* Disconnect */}
       <div className="flex flex-col items-center gap-1 mr-auto md:mr-0 md:ml-8">
-        <DisconnectButton className="lk-button !bg-red-600 hover:!bg-red-500 !text-white !px-4 md:!px-6 !py-2 md:!py-3 !rounded-full text-sm md:text-base font-bold !transition-all shadow-lg">
+        <DisconnectButton className="lk-button !bg-red-600 hover:!bg-red-500 !text-white !px-4 md:!px-6 !py-2 md:!py-3 !rounded-full text-sm md:text-base font-bold !transition-all shadow-lg flex items-center gap-2">
           مغادرة
         </DisconnectButton>
       </div>

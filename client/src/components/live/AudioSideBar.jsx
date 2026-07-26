@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useParticipants } from '@livekit/components-react';
+import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api/axios';
 
@@ -19,7 +20,7 @@ const AudioSidebar = ({ roomName }) => {
         </h2>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-2 md:p-3 space-y-2">
+      <div className="flex-1 overflow-y-auto p-2 md:p-3 space-y-2 custom-scrollbar">
         {participants.map((p) => (
           <ParticipantRow key={p.identity} participant={p} isAdmin={isAdmin} roomName={roomName} />
         ))}
@@ -29,46 +30,43 @@ const AudioSidebar = ({ roomName }) => {
 };
 
 const ParticipantRow = ({ participant, isAdmin, roomName }) => {
-  const [actionLoading, setActionLoading] = useState(null); // 'approve' | 'revoke' | 'kick' | null
+  const [actionLoading, setActionLoading] = useState(null); 
 
   const isSpeaking = participant.isSpeaking;
   const isMicMuted = !participant.isMicrophoneEnabled;
 
   let metadata = {};
-  try {
-    metadata = JSON.parse(participant.metadata || '{}');
-  } catch {
-    metadata = {};
-  }
+  try { metadata = JSON.parse(participant.metadata || '{}'); } catch { metadata = {}; }
 
   const hasHandRaised = metadata.handRaised === true;
   const canPublish = participant.permissions?.canPublish;
   const displayName = participant.name?.trim() || (isAdmin && participant.isLocal ? 'المعلم' : 'مستخدم');
 
-  const runAction = async (action, endpoint) => {
+  const runAction = async (action, endpoint, successMessage) => {
     setActionLoading(action);
     try {
       await api.post(endpoint, { identity: participant.identity, roomName });
+      toast.success(successMessage);
     } catch (err) {
       console.error(`Failed to ${action}`, err);
+      toast.error('حدث خطأ، يرجى المحاولة مرة أخرى.');
     } finally {
       setActionLoading(null);
     }
   };
 
-  const handleApprove = () => runAction('approve', '/live/approve-mic');
-  const handleRevoke = () => runAction('revoke', '/live/revoke-mic');
+  const handleApprove = () => runAction('approve', '/live/approve-mic', `تم فتح المايك لـ ${displayName}`);
+  const handleRevoke = () => runAction('revoke', '/live/revoke-mic', `تم كتم ${displayName}`);
   const handleKick = () => {
     if (!window.confirm(`هل تريد إخراج "${displayName}" من الجلسة؟`)) return;
-    runAction('kick', '/live/kick');
+    runAction('kick', '/live/kick', `تم إخراج ${displayName}`);
   };
 
   return (
-    <div
-      className={`flex items-center justify-between gap-2 p-2 md:p-3 rounded-xl transition-all duration-300 ${
+    <div className={`flex items-center justify-between gap-2 p-2 md:p-3 rounded-xl transition-all duration-300 ${
         isSpeaking ? 'bg-primary/20 border border-primary shadow-[0_0_15px_rgba(134,175,153,0.3)]' : 'bg-gray-800 border border-transparent'
-      }`}
-    >
+      }`}>
+      
       <div className="flex items-center gap-2 md:gap-3 overflow-hidden min-w-0">
         <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-gray-700 flex items-center justify-center text-xs md:text-sm font-bold shrink-0">
           {displayName.charAt(0).toUpperCase()}
@@ -89,40 +87,19 @@ const ParticipantRow = ({ participant, isAdmin, roomName }) => {
         {isAdmin && !participant.isLocal && (
           <>
             {hasHandRaised && !canPublish && (
-              <button
-                onClick={handleApprove}
-                disabled={actionLoading === 'approve'}
-                className="text-green-400 hover:text-green-300 hover:bg-green-500/10 p-1.5 rounded-lg transition-colors disabled:opacity-50"
-                title="السماح بالتحدث"
-              >
-                <span className="material-symbols-outlined text-[18px]">
-                  {actionLoading === 'approve' ? 'progress_activity' : 'check_circle'}
-                </span>
+              <button onClick={handleApprove} disabled={actionLoading === 'approve'} className="text-green-400 hover:text-green-300 hover:bg-green-500/10 p-1.5 rounded-lg transition-colors disabled:opacity-50">
+                <span className="material-symbols-outlined text-[18px]">{actionLoading === 'approve' ? 'progress_activity' : 'check_circle'}</span>
               </button>
             )}
 
             {canPublish && (
-              <button
-                onClick={handleRevoke}
-                disabled={actionLoading === 'revoke'}
-                className="text-yellow-400 hover:text-yellow-300 hover:bg-yellow-500/10 p-1.5 rounded-lg transition-colors disabled:opacity-50"
-                title="كتم الميكروفون"
-              >
-                <span className="material-symbols-outlined text-[18px]">
-                  {actionLoading === 'revoke' ? 'progress_activity' : 'mic_off'}
-                </span>
+              <button onClick={handleRevoke} disabled={actionLoading === 'revoke'} className="text-yellow-400 hover:text-yellow-300 hover:bg-yellow-500/10 p-1.5 rounded-lg transition-colors disabled:opacity-50">
+                <span className="material-symbols-outlined text-[18px]">{actionLoading === 'revoke' ? 'progress_activity' : 'mic_off'}</span>
               </button>
             )}
 
-            <button
-              onClick={handleKick}
-              disabled={actionLoading === 'kick'}
-              className="text-red-400 hover:text-red-300 hover:bg-red-500/10 p-1.5 rounded-lg transition-colors disabled:opacity-50"
-              title="إخراج من الجلسة"
-            >
-              <span className="material-symbols-outlined text-[18px]">
-                {actionLoading === 'kick' ? 'progress_activity' : 'person_remove'}
-              </span>
+            <button onClick={handleKick} disabled={actionLoading === 'kick'} className="text-red-400 hover:text-red-300 hover:bg-red-500/10 p-1.5 rounded-lg transition-colors disabled:opacity-50">
+              <span className="material-symbols-outlined text-[18px]">{actionLoading === 'kick' ? 'progress_activity' : 'person_remove'}</span>
             </button>
           </>
         )}
