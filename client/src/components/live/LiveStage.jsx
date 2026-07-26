@@ -23,8 +23,16 @@ const LiveStage = () => {
   // Listen for native escape key or system back gesture exiting fullscreen
   useEffect(() => {
     const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
+      const isCurrentlyFullscreen = !!document.fullscreenElement;
+      setIsFullscreen(isCurrentlyFullscreen);
+      
+      // If the user exits fullscreen (e.g., via Android back button or swipe gesture),
+      // we must release the landscape orientation lock.
+      if (!isCurrentlyFullscreen && window.screen.orientation?.unlock) {
+        window.screen.orientation.unlock();
+      }
     };
+    
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
@@ -42,9 +50,25 @@ const LiveStage = () => {
 
     try {
       if (!document.fullscreenElement) {
+        // 1. Enter Fullscreen
         await containerRef.current.requestFullscreen();
+        
+        // 2. Force Landscape Orientation (Paysage)
+        if (window.screen.orientation?.lock) {
+          try {
+            await window.screen.orientation.lock('landscape');
+          } catch (orientationError) {
+            console.warn("Device does not support forcing orientation lock:", orientationError);
+          }
+        }
       } else {
+        // 1. Exit Fullscreen
         await document.exitFullscreen();
+        
+        // 2. Release Orientation Lock (Revert to Portrait if held that way)
+        if (window.screen.orientation?.unlock) {
+          window.screen.orientation.unlock();
+        }
       }
     } catch (err) {
       console.error("Error toggling fullscreen:", err);
@@ -84,7 +108,7 @@ const LiveStage = () => {
           </button>
         )}
 
-        {/* Bottom Controls Gradient Overlay (Improves visibility on bright screens) */}
+        {/* Bottom Controls Gradient Overlay */}
         <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-black/80 to-transparent pointer-events-none z-0 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300" />
 
         {/* Bottom Controls Container */}
