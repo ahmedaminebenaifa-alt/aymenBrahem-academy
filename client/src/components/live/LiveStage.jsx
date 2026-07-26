@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useTracks, VideoTrack } from '@livekit/components-react';
 import { Track, VideoQuality } from 'livekit-client';
 import { usePinchZoom } from '../../hooks/usePinchZoom';
@@ -14,22 +14,49 @@ const LiveStage = () => {
   const screenShareTracks = useTracks([Track.Source.ScreenShare]);
   const [qualityMenuOpen, setQualityMenuOpen] = useState(false);
   const [selectedQuality, setSelectedQuality] = useState(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  
+  const containerRef = useRef(null);
   const zoom = usePinchZoom();
-
   const track = screenShareTracks[0];
+
+  // Listen for native escape key or system back gesture exiting fullscreen
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
 
   const handleQualityChange = (quality) => {
     setSelectedQuality(quality);
     setQualityMenuOpen(false);
     if (track?.publication?.setVideoQuality) {
-      // null = let LiveKit's adaptive streaming decide automatically
       track.publication.setVideoQuality(quality ?? VideoQuality.HIGH);
+    }
+  };
+
+  const toggleFullscreen = async () => {
+    if (!containerRef.current) return;
+
+    try {
+      if (!document.fullscreenElement) {
+        await containerRef.current.requestFullscreen();
+      } else {
+        await document.exitFullscreen();
+      }
+    } catch (err) {
+      console.error("Error toggling fullscreen:", err);
     }
   };
 
   if (track) {
     return (
-      <div className="w-full h-full flex items-center justify-center bg-black rounded-xl overflow-hidden shadow-2xl relative touch-none">
+      <div 
+        ref={containerRef}
+        className="w-full h-full flex items-center justify-center bg-black lg:rounded-xl overflow-hidden shadow-2xl relative touch-none group"
+      >
         <div
           className="w-full h-full flex items-center justify-center"
           {...zoom.handlers}
@@ -40,52 +67,72 @@ const LiveStage = () => {
           </div>
         </div>
 
-        <div className="absolute top-3 right-3 md:top-4 md:right-4 bg-red-600 text-white px-2.5 py-1 md:px-3 md:py-1 rounded-full text-xs md:text-sm font-bold flex items-center gap-1.5 animate-pulse pointer-events-none">
+        {/* Live Indicator */}
+        <div className="absolute top-3 right-3 md:top-4 md:right-4 bg-red-600 text-white px-2.5 py-1 md:px-3 md:py-1 rounded-full text-xs md:text-sm font-bold flex items-center gap-1.5 animate-pulse pointer-events-none z-10">
           <span className="w-1.5 h-1.5 rounded-full bg-white" />
           مباشر
         </div>
 
+        {/* Zoom Reset Button */}
         {zoom.scale > 1 && (
           <button
             onClick={zoom.reset}
-            className="absolute bottom-3 right-3 md:bottom-4 md:right-4 bg-gray-900/80 text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5"
+            className="absolute top-3 left-3 md:top-4 md:left-4 bg-gray-900/80 text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 z-10 shadow-lg backdrop-blur-sm"
           >
             <span className="material-symbols-outlined text-[16px]">zoom_out</span>
             إعادة الضبط
           </button>
         )}
 
-        <div className="absolute bottom-3 left-3 md:bottom-4 md:left-4">
-          <button
-            onClick={() => setQualityMenuOpen((v) => !v)}
-            className="bg-gray-900/80 hover:bg-gray-900 text-white text-xs md:text-sm px-3 py-1.5 rounded-full flex items-center gap-1.5 transition-colors"
-          >
-            <span className="material-symbols-outlined text-[16px]">hd</span>
-            {QUALITY_OPTIONS.find((q) => q.value === selectedQuality)?.label || 'تلقائي'}
-          </button>
+        {/* Bottom Controls Gradient Overlay (Improves visibility on bright screens) */}
+        <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-black/80 to-transparent pointer-events-none z-0 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300" />
 
-          {qualityMenuOpen && (
-            <div className="absolute bottom-full mb-2 left-0 bg-gray-900 border border-gray-700 rounded-lg overflow-hidden shadow-xl min-w-[120px]">
-              {QUALITY_OPTIONS.map((opt) => (
-                <button
-                  key={opt.label}
-                  onClick={() => handleQualityChange(opt.value)}
-                  className={`w-full text-right px-4 py-2 text-xs md:text-sm transition-colors ${
-                    selectedQuality === opt.value ? 'bg-primary text-on-primary' : 'text-gray-300 hover:bg-gray-800'
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          )}
+        {/* Bottom Controls Container */}
+        <div className="absolute bottom-3 left-3 right-3 md:bottom-4 md:left-4 flex items-center justify-between z-10 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300">
+          
+          {/* Quality Selector */}
+          <div className="relative">
+            <button
+              onClick={() => setQualityMenuOpen((v) => !v)}
+              className="bg-gray-900/90 hover:bg-black text-white text-xs md:text-sm px-3 py-1.5 rounded-full flex items-center gap-1.5 transition-colors backdrop-blur-sm border border-gray-700"
+            >
+              <span className="material-symbols-outlined text-[16px]">hd</span>
+              {QUALITY_OPTIONS.find((q) => q.value === selectedQuality)?.label || 'تلقائي'}
+            </button>
+
+            {qualityMenuOpen && (
+              <div className="absolute bottom-full mb-2 left-0 bg-gray-900 border border-gray-700 rounded-lg overflow-hidden shadow-xl min-w-[120px] z-50">
+                {QUALITY_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.label}
+                    onClick={() => handleQualityChange(opt.value)}
+                    className={`w-full text-right px-4 py-2 text-xs md:text-sm transition-colors ${
+                      selectedQuality === opt.value ? 'bg-primary text-on-primary' : 'text-gray-300 hover:bg-gray-800'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Fullscreen Toggle */}
+          <button
+            onClick={toggleFullscreen}
+            className="bg-gray-900/90 hover:bg-black text-white p-1.5 md:p-2 rounded-full flex items-center justify-center transition-colors backdrop-blur-sm border border-gray-700"
+          >
+            <span className="material-symbols-outlined text-[20px] md:text-[24px]">
+              {isFullscreen ? 'fullscreen_exit' : 'fullscreen'}
+            </span>
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center bg-gray-800 rounded-xl border-2 border-dashed border-gray-600 px-4 text-center">
+    <div className="w-full h-full flex flex-col items-center justify-center bg-gray-800 lg:rounded-xl border-y-2 lg:border-2 border-dashed border-gray-600 px-4 text-center">
       <span className="material-symbols-outlined text-5xl md:text-6xl text-gray-500 mb-4 animate-pulse">
         cast
       </span>

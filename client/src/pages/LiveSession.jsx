@@ -77,27 +77,27 @@ const LiveSession = () => {
         publishDefaults: { simulcast: true },
       }}
       data-lk-theme="default"
-      // Strict flex-col layout prevents overlapping issues on mobile
       className="flex flex-col h-[100dvh] w-full bg-gray-900 text-white overflow-hidden"
       onDisconnected={handleDisconnected}
     >
       <Toaster position="top-center" toastOptions={{ className: 'bg-gray-800 text-white border border-gray-700' }} />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
-        {/* Stage */}
-        <div className="flex-1 p-2 md:p-4 flex items-center justify-center relative min-h-[50vh] lg:min-h-0">
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden w-full max-w-[2000px] mx-auto bg-black lg:bg-gray-900">
+        
+        {/* Stage - Edge to edge on mobile, padded on desktop */}
+        <div className="flex-1 p-0 lg:p-4 flex items-center justify-center relative min-h-0 bg-black">
           <LiveStage />
         </div>
         
-        {/* Sidebar */}
-        <div className="w-full lg:w-80 h-1/3 lg:h-full bg-gray-800 border-t lg:border-t-0 lg:border-l border-gray-700 shrink-0">
+        {/* Sidebar - Fixed 40% height on mobile, fixed width on desktop */}
+        <div className="w-full lg:w-80 h-[40vh] lg:h-full bg-gray-900 lg:bg-gray-800 border-t lg:border-t-0 lg:border-l border-gray-800 shrink-0 flex flex-col z-10 shadow-[0_-5px_15px_rgba(0,0,0,0.3)] lg:shadow-none">
           <AudioSidebar roomName={roomName} />
         </div>
       </div>
 
       {/* Fixed Control Bar at Bottom */}
-      <div className="h-20 bg-gray-950 border-t border-gray-800 flex items-center justify-center shrink-0">
+      <div className="h-[72px] md:h-20 bg-gray-950 border-t border-gray-800 flex items-center justify-center shrink-0 z-20">
         <ControlBar />
       </div>
 
