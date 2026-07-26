@@ -107,3 +107,16 @@ export const grantMicPermission = async (roomName, identity) => {
   
   return roomService.updateParticipant(roomName, identity, JSON.stringify({ handRaised: false }));
 };
+
+export const kickParticipant = async (roomName, identity) => {
+  return roomService.removeParticipant(roomName, identity);
+};
+
+export const revokeMicPermission = async (roomName, identity) => {
+  await roomService.updateParticipant(roomName, identity, undefined, {
+    canPublish: false,
+    canSubscribe: true,
+    canPublishData: false,
+  });
+  return roomService.updateParticipant(roomName, identity, JSON.stringify({ handRaised: false }));
+};

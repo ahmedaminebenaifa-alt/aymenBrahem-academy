@@ -11,6 +11,7 @@ import AudioSidebar from '../components/live/AudioSideBar.jsx';
 import ControlBar from '../components/live/ControlBar.jsx';
 
 const LiveSession = () => {
+  const [roomName, setRoomName] = useState('');
   const [token, setToken] = useState('');
   const [serverUrl, setServerUrl] = useState('');
   const [error, setError] = useState(null);
@@ -24,12 +25,22 @@ const LiveSession = () => {
         const data = await getLiveToken();
         setToken(data.token);
         setServerUrl(data.url);
+        setRoomName(data.roomName);
       } catch (err) {
         console.error('Failed to fetch live token:', err);
         setError('لا يوجد بث مباشر حالياً أو تعذر الاتصال بالخادم.');
       }
     };
     fetchToken();
+  }, []);
+
+  useEffect(() => {
+    document.body.style.margin = '0';
+    document.body.style.backgroundColor = '#111827'; // matches bg-gray-900
+    return () => {
+      document.body.style.margin = '';
+      document.body.style.backgroundColor = '';
+    };
   }, []);
 
   const handleDisconnected = useCallback(async () => {
@@ -79,7 +90,7 @@ const LiveSession = () => {
       onDisconnected={handleDisconnected}
     >
       {/* RESPONSIVE LAYOUT: Column on mobile, Row on desktop */}
-      <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
+      <div className="fixed inset-0 flex flex-col w-full h-full bg-gray-900 text-white overflow-hidden">
         
         {/* Stage takes remaining space */}
         <div className="flex-1 p-2 md:p-4 flex items-center justify-center relative min-h-[50vh] lg:min-h-0">
@@ -88,7 +99,7 @@ const LiveSession = () => {
         
         {/* Sidebar at bottom on mobile (35% height), right on desktop */}
         <div className="w-full lg:w-80 h-1/3 lg:h-full bg-gray-800 border-t lg:border-t-0 lg:border-l border-gray-700">
-          <AudioSidebar />
+          <AudioSidebar roomName={roomName} />
         </div>
       </div>
 

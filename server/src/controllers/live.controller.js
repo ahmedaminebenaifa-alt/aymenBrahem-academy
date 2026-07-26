@@ -1,6 +1,7 @@
 import { WebhookReceiver } from 'livekit-server-sdk';
 import * as liveService from '../services/live.service.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
+import prisma from '../config/db.js';
 
 const receiver = new WebhookReceiver(
   process.env.LIVEKIT_API_KEY,
@@ -75,7 +76,12 @@ export const getToken = asyncHandler(async (req, res) => {
     return res.status(404).json({ status: 'fail', message: 'لا يوجد بث مباشر حاليًا' });
   }
 
-  const token = await liveService.generateLiveToken(req.user, session.roomName);
+  const fullUser = await prisma.user.findUnique({
+    where: { id: req.user.id },
+    select: { id: true, name: true, role: true },
+  });
+
+  const token = await liveService.generateLiveToken(fullUser, session.roomName);
 
   res.status(200).json({
     status: 'success',
@@ -108,5 +114,29 @@ export const approveMic = asyncHandler(async (req, res) => {
 
   await liveService.grantMicPermission(session.roomName, identity);
   
+  res.status(200).json({ status: 'success' });
+});
+
+export const kickUser = asyncHandler(async (req, res) => {
+  const { identity } = req.body;
+  const session = await liveService.getActiveSession();
+
+  if (!session) {
+    return res.status(404).json({ status: 'fail', message: 'لا يوجد بث مباشر حالياً' });
+  }
+
+  await liveService.kickParticipant(session.roomName, identity);
+  res.status(200).json({ status: 'success' });
+});
+
+export const revokeMic = asyncHandler(async (req, res) => {
+  const { identity } = req.body;
+  const session = await liveService.getActiveSession();
+
+  if (!session) {
+    return res.status(404).json({ status: 'fail', message: 'لا يوجد بث مباشر حالياً' });
+  }
+
+  await liveService.revokeMicPermission(session.roomName, identity);
   res.status(200).json({ status: 'success' });
 });

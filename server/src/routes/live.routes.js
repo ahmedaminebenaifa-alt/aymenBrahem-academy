@@ -11,5 +11,8 @@ router.get('/', verifyAuth, liveController.getLiveStatus);
 router.post('/token', verifyAuth, liveController.getToken);
 router.post('/raise-hand', verifyAuth, liveController.raiseHand);
 router.post('/approve-mic', verifyAuth, requireRole('ADMIN'), liveController.approveMic);
+router.post('/kick', verifyAuth, requireRole('ADMIN'), liveController.kickUser);
+router.post('/revoke-mic', verifyAuth, requireRole('ADMIN'), liveController.revokeMic);
+
 
 export default router;
