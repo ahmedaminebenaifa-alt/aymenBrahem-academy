@@ -16,6 +16,8 @@ const LiveSession = () => {
   const [token, setToken] = useState('');
   const [serverUrl, setServerUrl] = useState('');
   const [error, setError] = useState(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Mobile drawer state
+  
   const { user } = useAuth();
   const navigate = useNavigate();
   const isAdmin = user?.role === 'ADMIN';
@@ -83,22 +85,45 @@ const LiveSession = () => {
       <Toaster position="top-center" toastOptions={{ className: 'bg-gray-800 text-white border border-gray-700' }} />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden w-full max-w-[2000px] mx-auto bg-black lg:bg-gray-900">
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden w-full max-w-[2000px] mx-auto bg-black lg:bg-gray-900 relative">
         
-        {/* Stage - Edge to edge on mobile, padded on desktop */}
+        {/* Stage - Now takes full height on mobile */}
         <div className="flex-1 p-0 lg:p-4 flex items-center justify-center relative min-h-0 bg-black">
           <LiveStage />
         </div>
+
+        {/* Mobile Overlay Background */}
+        {isSidebarOpen && (
+          <div 
+            className="absolute inset-0 bg-black/60 z-30 lg:hidden backdrop-blur-sm transition-opacity"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
         
-        {/* Sidebar - Fixed 40% height on mobile, fixed width on desktop */}
-        <div className="w-full lg:w-80 h-[40vh] lg:h-full bg-gray-900 lg:bg-gray-800 border-t lg:border-t-0 lg:border-l border-gray-800 shrink-0 flex flex-col z-10 shadow-[0_-5px_15px_rgba(0,0,0,0.3)] lg:shadow-none">
-          <AudioSidebar roomName={roomName} />
+        {/* Sidebar - Drawer on Mobile, Fixed Column on Desktop */}
+        <div 
+          className={`absolute lg:relative w-full lg:w-80 h-[65vh] lg:h-full bottom-0 left-0 lg:bottom-auto lg:left-auto bg-gray-900 lg:bg-gray-800 border-t lg:border-t-0 lg:border-l border-gray-800 shrink-0 flex flex-col z-40 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] lg:shadow-none transition-transform duration-300 ease-in-out rounded-t-3xl lg:rounded-none ${
+            isSidebarOpen ? 'translate-y-0' : 'translate-y-full lg:translate-y-0'
+          }`}
+        >
+          {/* Mobile drag handle indicator */}
+          <div 
+            className="w-full flex items-center justify-center pt-3 pb-2 lg:hidden cursor-pointer"
+            onClick={() => setIsSidebarOpen(false)}
+          >
+            <div className="w-12 h-1.5 bg-gray-700 rounded-full"></div>
+          </div>
+          
+          <AudioSidebar roomName={roomName} onClose={() => setIsSidebarOpen(false)} />
         </div>
       </div>
 
       {/* Fixed Control Bar at Bottom */}
-      <div className="h-[72px] md:h-20 bg-gray-950 border-t border-gray-800 flex items-center justify-center shrink-0 z-20">
-        <ControlBar />
+      <div className="h-[72px] md:h-20 bg-gray-950 border-t border-gray-800 flex items-center justify-center shrink-0 z-50">
+        <ControlBar 
+          onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} 
+          isSidebarOpen={isSidebarOpen} 
+        />
       </div>
 
       <RoomAudioRenderer />

@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api/axios';
 
-const ControlBar = () => {
+const ControlBar = ({ onToggleSidebar, isSidebarOpen }) => {
   const { user } = useAuth();
   const isAdmin = user?.role === 'ADMIN';
 
@@ -115,6 +115,19 @@ const ControlBar = () => {
           </span>
         </div>
       )}
+
+      {/* Participants Toggle (Mobile Only) */}
+      <div className="flex flex-col items-center gap-1 lg:hidden">
+        <button
+          onClick={onToggleSidebar}
+          className={`p-3 md:p-4 rounded-full transition-all shadow-lg flex items-center justify-center ${
+            isSidebarOpen ? 'bg-primary text-on-primary hover:opacity-90' : 'bg-gray-800 hover:bg-gray-700 text-white'
+          }`}
+        >
+          <span className="material-symbols-outlined text-[20px] md:text-[22px]">group</span>
+        </button>
+        <span className="text-[10px] md:text-xs text-gray-400">المشاركون</span>
+      </div>
 
       {/* Disconnect */}
       <div className="flex flex-col items-center gap-1 mr-auto md:mr-0 md:ml-8">

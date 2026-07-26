@@ -4,19 +4,29 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api/axios';
 
-const AudioSidebar = ({ roomName }) => {
+const AudioSidebar = ({ roomName, onClose }) => {
   const participants = useParticipants();
   const { user } = useAuth();
   const isAdmin = user?.role === 'ADMIN';
 
   return (
-    <div className="flex flex-col h-full w-full bg-gray-900 border-l border-gray-800 text-white">
-      <div className="p-3 md:p-4 border-b border-gray-800 bg-gray-950 shrink-0">
+    <div className="flex flex-col h-full w-full bg-gray-900 lg:border-l lg:border-gray-800 text-white">
+      <div className="px-3 pb-3 md:p-4 border-b border-gray-800 shrink-0">
         <h2 className="text-sm md:text-lg font-bold flex items-center justify-between">
-          <span>المشاركون</span>
-          <span className="bg-primary text-on-primary text-[10px] md:text-xs px-2 py-1 rounded-full font-mono">
-            {participants.length}
-          </span>
+          <div className="flex items-center gap-2">
+            <span>المشاركون</span>
+            <span className="bg-primary text-on-primary text-[10px] md:text-xs px-2 py-1 rounded-full font-mono">
+              {participants.length}
+            </span>
+          </div>
+          
+          {/* Mobile Close Button */}
+          <button 
+            onClick={onClose} 
+            className="lg:hidden p-1 bg-gray-800 hover:bg-gray-700 rounded-full text-gray-400 hover:text-white transition-colors"
+          >
+            <span className="material-symbols-outlined text-[18px]">close</span>
+          </button>
         </h2>
       </div>
 
