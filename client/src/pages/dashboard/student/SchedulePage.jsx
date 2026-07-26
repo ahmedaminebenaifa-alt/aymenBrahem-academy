@@ -4,6 +4,7 @@ import { useLiveSchedule } from '../../../hooks/useLiveSchedule';
 import { useSidebar } from '../../../context/SidebarContext'; 
 
 const DAY_NAMES = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+const SHORT_DAY_NAMES = ['أحد', 'إثن', 'ثلا', 'أرب', 'خمي', 'جمع', 'سبت']; // For mobile tabs
 const MONTH_NAMES = ['جانفي', 'فيفري', 'مارس', 'أفريل', 'ماي', 'جوان', 'جويلية', 'أوت', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
 
 const START_HOUR = 8;
@@ -16,6 +17,9 @@ const SchedulePage = () => {
   const { sessions, isLoading } = useLiveSchedule();
   const { isOpen } = useSidebar(); 
   const [currentTime, setCurrentTime] = useState(new Date());
+  
+  // State to track which day is selected on the mobile view (defaults to today)
+  const [selectedMobileDateIndex, setSelectedMobileDateIndex] = useState(() => new Date().getDay());
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
@@ -72,54 +76,76 @@ const SchedulePage = () => {
   return (
     <div 
       dir="rtl" 
-      className={`min-h-screen bg-surface p-4 md:py-8 md:pl-8 w-full overflow-hidden transition-[padding] duration-500 ease-[cubic-bezier(0.2,1,0.2,1)] ${
+      className={`min-h-screen bg-surface p-4 md:py-8 md:pl-8 w-full overflow-x-hidden transition-[padding] duration-500 ease-[cubic-bezier(0.2,1,0.2,1)] ${
         isOpen ? 'md:pr-[300px]' : 'md:pr-[120px]'
       }`}
     >
       <div className="max-w-7xl mx-auto">
         
         {/* Header Section */}
-        <div className="mb-10 text-center md:text-right">
-          <h1 className="text-3xl md:text-4xl font-bold font-display text-primary mb-3 flex items-center justify-center md:justify-start gap-3">
-            <span className="material-symbols-outlined text-4xl md:text-5xl">event_note</span>
+        <div className="mb-8 md:mb-10 text-center md:text-right">
+          <h1 className="text-2xl md:text-4xl font-bold font-display text-primary mb-3 flex items-center justify-center md:justify-start gap-3">
+            <span className="material-symbols-outlined text-3xl md:text-5xl">event_note</span>
             جدول الجلسات المباشرة
           </h1>
-          <p className="text-on-surface-variant text-base md:text-lg">تصفح مواعيد الدروس المباشرة لهذا الأسبوع وانضم في الوقت المحدد.</p>
+          <p className="text-on-surface-variant text-sm md:text-lg">تصفح مواعيد الدروس المباشرة لهذا الأسبوع وانضم في الوقت المحدد.</p>
         </div>
 
         {/* Weekly Table Container */}
-        <div className="bg-surface-container-lowest border border-outline-variant/40 rounded-2xl shadow-sm overflow-hidden flex flex-col h-[750px]">
+        <div className="bg-surface-container-lowest border border-outline-variant/40 rounded-2xl shadow-sm overflow-hidden flex flex-col h-[650px] md:h-[750px]">
           
           <div className="flex items-center justify-between p-4 border-b border-outline-variant/30 bg-surface-container-lowest">
             <div className="flex items-center gap-3">
               <span className="material-symbols-outlined text-primary text-2xl">calendar_month</span>
               <h3 className="font-bold text-lg text-on-surface hidden sm:block">الجدول الأسبوعي</h3>
             </div>
-            <div className="px-4 py-2 bg-surface-container rounded-xl border border-outline-variant/30 text-sm font-bold text-on-surface-variant shadow-sm flex items-center gap-2">
-              <span className="material-symbols-outlined text-[18px]">date_range</span>
+            <div className="px-3 md:px-4 py-2 bg-surface-container rounded-xl border border-outline-variant/30 text-xs md:text-sm font-bold text-on-surface-variant shadow-sm flex items-center gap-2 mx-auto sm:mx-0">
+              <span className="material-symbols-outlined text-[16px] md:text-[18px]">date_range</span>
               {weekDates[0].getDate()} {MONTH_NAMES[weekDates[0].getMonth()]} - {weekDates[6].getDate()} {MONTH_NAMES[weekDates[6].getMonth()]} {weekDates[0].getFullYear()}
             </div>
           </div>
 
-          {/* Scrollable Area - Fixed horizontal scrolling */}
-          <div className="flex-1 overflow-auto relative scrollbar-hide">
-            <div className="min-w-[900px] w-full flex flex-col h-full"> 
+          {/* Mobile Day Selector (Taki Style - Visible only on small screens) */}
+          <div className="md:hidden flex justify-between items-center p-3 bg-surface-container-lowest border-b border-outline-variant/30 overflow-x-auto gap-1.5 shadow-sm z-20">
+            {weekDates.map((date, i) => {
+              const isSelected = selectedMobileDateIndex === i;
+              return (
+                <button
+                  key={i}
+                  onClick={() => setSelectedMobileDateIndex(i)}
+                  className={`flex-1 min-w-[42px] flex flex-col items-center justify-center py-2 rounded-xl transition-all duration-200 ${
+                    isSelected 
+                      ? 'bg-primary text-on-primary shadow-md scale-105' 
+                      : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container border border-outline-variant/20'
+                  }`}
+                >
+                  <span className="text-[10px] font-bold mb-1 opacity-90">{SHORT_DAY_NAMES[date.getDay()]}</span>
+                  <span className="text-sm font-black">{date.getDate()}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Scrollable Area */}
+          <div className="flex-1 overflow-auto relative scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
+            {/* md:min-w-[900px] ensures desktop is wide, while w-full lets mobile collapse to screen width */}
+            <div className="md:min-w-[900px] w-full flex flex-col h-full"> 
               
-              {/* Days Header */}
-              <div className="sticky top-0 z-30 flex bg-surface-container-lowest border-b border-outline-variant/30 shadow-sm">
+              {/* Desktop Days Header (Hidden on Mobile) */}
+              <div className="hidden md:flex sticky top-0 z-30 bg-surface-container-lowest border-b border-outline-variant/30 shadow-sm">
                 <div className="w-16 shrink-0 border-l border-outline-variant/30 bg-surface-container-low" />
                 {weekDates.map((date, i) => {
                   const today = isToday(date);
                   return (
                     <div 
                       key={i} 
-                      className={`flex-1 min-w-[120px] p-3 text-center border-l last:border-l-0 border-outline-variant/30 transition-colors ${
+                      className={`flex-1 p-3 text-center border-l last:border-l-0 border-outline-variant/30 transition-colors ${
                         today ? 'bg-primary text-on-primary rounded-t-lg border-b-2 border-primary-fixed shadow-inner' : 'text-on-surface'
                       }`}
                     >
                       <div className="text-sm font-bold">{DAY_NAMES[date.getDay()]}</div>
                       <div className={`text-xs mt-1 ${today ? 'text-primary-fixed font-medium' : 'text-on-surface-variant'}`}>
-                        {date.getDate()} {MONTH_NAMES[date.getMonth()].substring(0, 3)}
+                        {date.getDate()} {MONTH_NAMES[date.getMonth()]}
                       </div>
                     </div>
                   );
@@ -129,6 +155,7 @@ const SchedulePage = () => {
               {/* Grid Body */}
               <div className="flex relative isolate flex-1">
                 
+                {/* Time Axis Container (Sticky Right) */}
                 <div className="w-16 shrink-0 border-l border-outline-variant/30 bg-surface-container flex flex-col z-20 sticky right-0">
                   {HOURS.map((hour) => (
                     <div key={hour} className="h-[64px] border-b border-outline-variant/30 relative">
@@ -139,14 +166,25 @@ const SchedulePage = () => {
                   ))}
                 </div>
 
+                {/* Day Columns */}
                 {weekDates.map((date, i) => {
                   const today = isToday(date);
+                  const isSelectedOnMobile = selectedMobileDateIndex === i;
+                  
                   return (
-                    <div key={i} className={`flex-1 min-w-[120px] border-l last:border-l-0 border-outline-variant/30 relative ${today ? 'bg-surface-container-low' : 'bg-surface-container-lowest'}`}>
+                    <div 
+                      key={i} 
+                      // Hide unselected days on mobile, show all on desktop
+                      className={`flex-1 border-l last:border-l-0 border-outline-variant/30 relative ${
+                        isSelectedOnMobile ? 'block' : 'hidden md:block'
+                      } ${today ? 'bg-surface-container-low' : 'bg-surface-container-lowest'}`}
+                    >
+                      {/* Horizontal Dashed Lines */}
                       {HOURS.map((hour) => (
                         <div key={hour} className="h-[64px] border-b border-dashed border-outline-variant/40 opacity-50" />
                       ))}
 
+                      {/* Event Cards */}
                       {getEventsForDate(date).map((session) => {
                         const top = calculateTopOffset(new Date(session.scheduledAt));
                         if (top < 0) return null;
@@ -201,6 +239,7 @@ const SchedulePage = () => {
                   );
                 })}
 
+                {/* Current Time Indicator Line */}
                 {(() => {
                   const topOffset = calculateTopOffset(currentTime);
                   if (topOffset >= 0) {

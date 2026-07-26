@@ -2,6 +2,7 @@ import { useMyEnrollments } from '../../../hooks/useMyEnrollments';
 import CourseCard from '../../../components/courses/CourseCard';
 import CourseFilterBar from '../../../components/dashboard/student/CourseFilterBar';
 import EngravedBackground from '../../../components/dashboard/shared/EngravedBackground';
+import { useSidebar } from '../../../context/SidebarContext';
 
 export default function MyCourses() {
   const {
@@ -15,8 +16,14 @@ export default function MyCourses() {
     setSortOption,
   } = useMyEnrollments();
 
+  const { isOpen } = useSidebar();
+
   return (
-    <div className="relative min-h-screen">
+    <div className={`relative min-h-screen transition-[padding] duration-500 ease-[cubic-bezier(0.2,1,0.2,1)] ${
+      isOpen ? 'md:pr-[300px]' : 'md:pr-[120px]'
+    }`}>
+      {/* 3. Apply the dynamic padding right (pr) based on the sidebar state */}
+      
       {/* خلفية النقش الإسلامي مطابقة للوحة تحكم الطالب */}
       <EngravedBackground color="var(--primary-container)" opacity={0.06} animated={false} />
 
